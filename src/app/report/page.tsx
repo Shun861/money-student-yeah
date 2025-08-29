@@ -5,8 +5,7 @@ import { calculateWalls } from "@/lib/rules";
 export default function ReportPage() {
   const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
-  const shifts = useAppStore((s) => s.shifts);
-  const r = calculateWalls(profile, incomes, shifts);
+  const r = calculateWalls(profile, incomes);
 
   return (
     <div className="grid gap-6">

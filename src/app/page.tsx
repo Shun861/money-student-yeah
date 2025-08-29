@@ -6,8 +6,7 @@ import { CurrencyYenIcon, ClockIcon, ExclamationTriangleIcon, CheckCircleIcon } 
 export default function Home() {
   const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
-  const shifts = useAppStore((s) => s.shifts);
-  const r = calculateWalls(profile, incomes, shifts);
+  const r = calculateWalls(profile, incomes);
 
   const getStatusColor = (percent: number) => {
     if (percent < 70) return 'text-green-600';

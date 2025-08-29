@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { IncomeEntry, ShiftEntry, UserProfile } from "./store";
+import { IncomeEntry, UserProfile } from "./store";
 
 export type WallType = "103" | "130";
 
@@ -13,8 +13,7 @@ export type CalcResult = {
 
 export function calculateWalls(
 	profile: UserProfile,
-	incomes: IncomeEntry[],
-	_shifts: ShiftEntry[]
+	incomes: IncomeEntry[]
 ): CalcResult {
 	const year = dayjs().year();
 	const incomesThisYear = incomes.filter((i) => dayjs(i.date).year() === year);
