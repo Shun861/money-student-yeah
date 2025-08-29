@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,10 +25,27 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="min-h-screen flex flex-col">
+          <header className="border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
+            <nav className="mx-auto max-w-5xl px-4 py-3 flex items-center gap-4 text-sm">
+              <Link href="/" className="font-semibold">扶養調整</Link>
+              <div className="flex items-center gap-3 text-gray-600">
+                <Link href="/onboarding" className="hover:text-black">診断</Link>
+                <Link href="/income" className="hover:text-black">収入入力</Link>
+                <Link href="/schedule" className="hover:text-black">シフト</Link>
+                <Link href="/alerts" className="hover:text-black">アラート</Link>
+                <Link href="/report" className="hover:text-black">レポート</Link>
+              </div>
+            </nav>
+          </header>
+          <main className="flex-1 mx-auto max-w-5xl w-full px-4 py-6">
+            {children}
+          </main>
+          <footer className="border-t text-xs text-gray-500 py-4 text-center">
+            © {new Date().getFullYear()} Money Student Yeah
+          </footer>
+        </div>
       </body>
     </html>
   );

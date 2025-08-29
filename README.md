@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 学生アルバイト扶養調整アプリ (MVP)
 
-## Getting Started
+学生アルバイトが「103万・130万などの扶養壁」を超えないよう、年収見込みを管理し意思決定をサポートするWebアプリ（Next.js）。
 
-First, run the development server:
+## MVPでできること
+- 初回診断（学年・親の扶養・勤務先規模・時給）
+- 収入入力（手動：日付/勤務先/金額）
+- シフト予定入力（日時・時間数、時給から概算）
+- ダッシュボード（累計収入・各壁までの残額・残り勤務時間の概算表示）
+- アラート（壁まで5,000円以下のしきい値を通知表示）
+- レポート（現在の状況をPDFとして保存/共有）
 
+## 主要ページ
+- `/` ダッシュボード
+- `/onboarding` 初回診断
+- `/income` 収入入力
+- `/schedule` シフト予定
+- `/alerts` アラート
+- `/report` レポート出力
+
+## 技術スタック
+- Next.js 15 (App Router, TypeScript)
+- Tailwind CSS
+- Zustand（グローバルステート）
+- dayjs（集計）
+
+## 開発
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ビルド
+```bash
+npm run build && npm run start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 設定・仕様メモ
+- 103万/130万の閾値は暫定固定（`src/lib/rules.ts`）。
+- 時給は診断で設定し、未指定のシフトはこの時給で概算します。
+- データはクライアント状態のみ（永続化なし）。将来的にPWA/バックエンド連携予定。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 今後の拡張（案）
+- CSVアップロード、LINEログイン、PWA通知
+- 店長向けビュー、大学連携
+- ルールエンジンの法改正追随
