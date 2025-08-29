@@ -100,6 +100,15 @@ export default function ProfilePage() {
   const [selectedBracket, setSelectedBracket] = useState<BracketType>(profile.bracket ?? 103);
   const [showDetails, setShowDetails] = useState<BracketType | null>(null);
   const [activeTab, setActiveTab] = useState<'report' | 'settings'>('report');
+  
+  // ヘルプ表示の状態管理
+  const [showBirthDateHelp, setShowBirthDateHelp] = useState(false);
+  const [showStudentTypeHelp, setShowStudentTypeHelp] = useState(false);
+  const [showResidenceHelp, setShowResidenceHelp] = useState(false);
+  const [showInsuranceHelp, setShowInsuranceHelp] = useState(false);
+  const [showParentInsuranceHelp, setShowParentInsuranceHelp] = useState(false);
+  const [showLivingStatusHelp, setShowLivingStatusHelp] = useState(false);
+  const [showAllowanceHelp, setShowAllowanceHelp] = useState(false);
 
   const handleBracketSelect = (bracket: BracketType) => {
     setSelectedBracket(bracket);
@@ -484,9 +493,17 @@ export default function ProfilePage() {
             <h3 className="text-lg font-semibold mb-4">基本情報</h3>
             <div className="grid gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  生年月日
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    生年月日
+                  </label>
+                  <button
+                    onClick={() => setShowBirthDateHelp(!showBirthDateHelp)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {showBirthDateHelp ? '解説を隠す' : '解説を見る'}
+                  </button>
+                </div>
                 <input
                   type="date"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -494,12 +511,26 @@ export default function ProfilePage() {
                   onChange={(e) => setProfile({ birthDate: e.target.value })}
                   max={new Date().toISOString().split('T')[0]}
                 />
+                {showBirthDateHelp && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p><strong>なぜ必要？</strong></p>
+                    <p>年齢によって扶養控除の適用可否が変わります。16歳未満は扶養控除の対象外、16歳以上23歳未満は特定扶養控除の対象となります。</p>
+                  </div>
+                )}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  在学区分
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    在学区分
+                  </label>
+                  <button
+                    onClick={() => setShowStudentTypeHelp(!showStudentTypeHelp)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {showStudentTypeHelp ? '解説を隠す' : '解説を見る'}
+                  </button>
+                </div>
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   value={profile.studentType || ""}
@@ -512,12 +543,26 @@ export default function ProfilePage() {
                   <option value="leave">休学中</option>
                   <option value="graduate">卒業予定</option>
                 </select>
+                {showStudentTypeHelp && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p><strong>なぜ重要？</strong></p>
+                    <p>在学区分によって勤労学生控除の適用や、扶養控除の判定基準が変わります。特に定時制・通信制は勤労学生控除の対象外となる場合があります。</p>
+                  </div>
+                )}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  居住自治体
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    居住自治体
+                  </label>
+                  <button
+                    onClick={() => setShowResidenceHelp(!showResidenceHelp)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {showResidenceHelp ? '解説を隠す' : '解説を見る'}
+                  </button>
+                </div>
                 <input
                   type="text"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -525,6 +570,12 @@ export default function ProfilePage() {
                   value={profile.residenceCity || ""}
                   onChange={(e) => setProfile({ residenceCity: e.target.value })}
                 />
+                {showResidenceHelp && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p><strong>なぜ必要？</strong></p>
+                    <p>住民税の非課税基準は自治体によって異なります。正確な判定のために居住地の情報が必要です。</p>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -534,9 +585,17 @@ export default function ProfilePage() {
             <h3 className="text-lg font-semibold mb-4">保険情報</h3>
             <div className="grid gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  保険加入状況
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    保険加入状況
+                  </label>
+                  <button
+                    onClick={() => setShowInsuranceHelp(!showInsuranceHelp)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {showInsuranceHelp ? '解説を隠す' : '解説を見る'}
+                  </button>
+                </div>
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   value={profile.insuranceStatus || ""}
@@ -548,13 +607,27 @@ export default function ProfilePage() {
                   <option value="employee_health">社会保険</option>
                   <option value="none">未加入</option>
                 </select>
+                {showInsuranceHelp && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p><strong>なぜ重要？</strong></p>
+                    <p>保険加入状況によって社会保険の加入要件が変わります。親の扶養に入っている場合は、収入制限が厳しくなります。</p>
+                  </div>
+                )}
               </div>
               
               {profile.insuranceStatus === "parent_dependent" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    親の保険種別
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      親の保険種別
+                    </label>
+                    <button
+                      onClick={() => setShowParentInsuranceHelp(!showParentInsuranceHelp)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      {showParentInsuranceHelp ? '解説を隠す' : '解説を見る'}
+                    </button>
+                  </div>
                   <select
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     value={profile.parentInsuranceType || ""}
@@ -565,13 +638,27 @@ export default function ProfilePage() {
                     <option value="national_health">国民健康保険</option>
                     <option value="other">その他</option>
                   </select>
+                  {showParentInsuranceHelp && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                      <p><strong>なぜ必要？</strong></p>
+                      <p>親の保険種別によって被扶養者の認定基準が変わります。健康保険組合は比較的緩やか、国民健康保険は厳しい基準が適用されることが多いです。</p>
+                    </div>
+                  )}
                 </div>
               )}
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  親との同居状況
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    親との同居状況
+                  </label>
+                  <button
+                    onClick={() => setShowLivingStatusHelp(!showLivingStatusHelp)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {showLivingStatusHelp ? '解説を隠す' : '解説を見る'}
+                  </button>
+                </div>
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   value={profile.livingStatus || ""}
@@ -581,13 +668,27 @@ export default function ProfilePage() {
                   <option value="living_together">同居</option>
                   <option value="living_separately">別居</option>
                 </select>
+                {showLivingStatusHelp && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p><strong>なぜ重要？</strong></p>
+                    <p>同居・別居によって扶養控除の判定基準が変わります。別居の場合は仕送り額も考慮されます。</p>
+                  </div>
+                )}
               </div>
               
               {profile.livingStatus === "living_separately" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    月額仕送り
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      月額仕送り
+                    </label>
+                    <button
+                      onClick={() => setShowAllowanceHelp(!showAllowanceHelp)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      {showAllowanceHelp ? '解説を隠す' : '解説を見る'}
+                    </button>
+                  </div>
                   <input
                     type="number"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -595,6 +696,12 @@ export default function ProfilePage() {
                     value={profile.monthlyAllowance || ""}
                     onChange={(e) => setProfile({ monthlyAllowance: Number(e.target.value) || undefined })}
                   />
+                  {showAllowanceHelp && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                      <p><strong>なぜ必要？</strong></p>
+                      <p>別居の場合、仕送り額は扶養控除の判定に影響します。仕送り額が多いほど扶養控除の対象外になりやすくなります。</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

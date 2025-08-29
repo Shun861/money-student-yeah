@@ -54,6 +54,15 @@ export default function OnboardingPage() {
   
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [showAllowanceInput, setShowAllowanceInput] = useState(false);
+  
+  // ヘルプ表示の状態管理
+  const [showBirthDateHelp, setShowBirthDateHelp] = useState(false);
+  const [showStudentTypeHelp, setShowStudentTypeHelp] = useState(false);
+  const [showResidenceHelp, setShowResidenceHelp] = useState(false);
+  const [showInsuranceHelp, setShowInsuranceHelp] = useState(false);
+  const [showParentInsuranceHelp, setShowParentInsuranceHelp] = useState(false);
+  const [showLivingStatusHelp, setShowLivingStatusHelp] = useState(false);
+  const [showAllowanceHelp, setShowAllowanceHelp] = useState(false);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -151,9 +160,17 @@ export default function OnboardingPage() {
           
           <div className="grid gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                生年月日 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  生年月日 <span className="text-red-500">*</span>
+                </label>
+                <button
+                  onClick={() => setShowBirthDateHelp(!showBirthDateHelp)}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  {showBirthDateHelp ? '解説を隠す' : '解説を見る'}
+                </button>
+              </div>
               <input
                 type="date"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -162,12 +179,26 @@ export default function OnboardingPage() {
                 max={new Date().toISOString().split('T')[0]}
               />
               <p className="text-xs text-gray-500 mt-1">年齢に基づいて扶養控除の適用可否を判定します</p>
+              {showBirthDateHelp && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                  <p><strong>なぜ必要？</strong></p>
+                  <p>年齢によって扶養控除の適用可否が変わります。16歳未満は扶養控除の対象外、16歳以上23歳未満は特定扶養控除の対象となります。</p>
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                在学区分 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  在学区分 <span className="text-red-500">*</span>
+                </label>
+                <button
+                  onClick={() => setShowStudentTypeHelp(!showStudentTypeHelp)}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  {showStudentTypeHelp ? '解説を隠す' : '解説を見る'}
+                </button>
+              </div>
               <div className="grid gap-3">
                 {studentTypeOptions.map((option) => (
                   <label key={option.value} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
@@ -186,12 +217,26 @@ export default function OnboardingPage() {
                   </label>
                 ))}
               </div>
+              {showStudentTypeHelp && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                  <p><strong>なぜ重要？</strong></p>
+                  <p>在学区分によって勤労学生控除の適用や、扶養控除の判定基準が変わります。特に定時制・通信制は勤労学生控除の対象外となる場合があります。</p>
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                居住自治体 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  居住自治体 <span className="text-red-500">*</span>
+                </label>
+                <button
+                  onClick={() => setShowResidenceHelp(!showResidenceHelp)}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  {showResidenceHelp ? '解説を隠す' : '解説を見る'}
+                </button>
+              </div>
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -200,6 +245,12 @@ export default function OnboardingPage() {
                 onChange={(e) => setProfile({ residenceCity: e.target.value })}
               />
               <p className="text-xs text-gray-500 mt-1">住民税の非課税基準判定に使用します</p>
+              {showResidenceHelp && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                  <p><strong>なぜ必要？</strong></p>
+                  <p>住民税の非課税基準は自治体によって異なります。正確な判定のために居住地の情報が必要です。</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
