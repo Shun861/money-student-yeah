@@ -1,5 +1,5 @@
 "use client";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, type StudentType, type InsuranceType, type ParentInsuranceType, type LivingStatus } from "@/lib/store";
 import { calculateWalls } from "@/lib/rules";
 import { useState } from "react";
 import { 
@@ -14,7 +14,8 @@ import {
   AcademicCapIcon,
   CalculatorIcon,
   ShieldCheckIcon,
-  PlusIcon
+  PlusIcon,
+  TrashIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -91,6 +92,9 @@ export default function ProfilePage() {
   const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
   const setProfile = useAppStore((s) => s.setProfile);
+  const addEmployer = useAppStore((s) => s.addEmployer);
+  const updateEmployer = useAppStore((s) => s.updateEmployer);
+  const removeEmployer = useAppStore((s) => s.removeEmployer);
   const r = calculateWalls(profile, incomes);
   
   const [selectedBracket, setSelectedBracket] = useState<BracketType>(profile.bracket ?? 103);
@@ -252,6 +256,92 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* 個人情報サマリー */}
+          <div className="rounded-xl border bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">個人情報サマリー</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">基本情報</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">生年月日:</span>
+                    <span className="font-medium">{profile.birthDate ? new Date(profile.birthDate).toLocaleDateString('ja-JP') : '未設定'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">在学区分:</span>
+                    <span className="font-medium">
+                      {profile.studentType === 'daytime' ? '昼間制' :
+                       profile.studentType === 'evening' ? '定時制' :
+                       profile.studentType === 'correspondence' ? '通信制' :
+                       profile.studentType === 'leave' ? '休学中' :
+                       profile.studentType === 'graduate' ? '卒業予定' : '未設定'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">居住自治体:</span>
+                    <span className="font-medium">{profile.residenceCity || '未設定'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">保険・扶養情報</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">保険加入状況:</span>
+                    <span className="font-medium">
+                      {profile.insuranceStatus === 'parent_dependent' ? '親の扶養' :
+                       profile.insuranceStatus === 'national_health' ? '国民健康保険' :
+                       profile.insuranceStatus === 'employee_health' ? '社会保険' :
+                       profile.insuranceStatus === 'none' ? '未加入' : '未設定'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">同居状況:</span>
+                    <span className="font-medium">
+                      {profile.livingStatus === 'living_together' ? '同居' :
+                       profile.livingStatus === 'living_separately' ? '別居' : '未設定'}
+                    </span>
+                  </div>
+                  {profile.monthlyAllowance && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">月額仕送り:</span>
+                      <span className="font-medium">{profile.monthlyAllowance.toLocaleString()}円</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 勤務先サマリー */}
+          {profile.employers.length > 0 && (
+            <div className="rounded-xl border bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">勤務先サマリー</h3>
+              <div className="grid gap-4">
+                {profile.employers.map((employer, index) => (
+                  <div key={employer.id} className="border rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">勤務先 {index + 1}: {employer.name || '未設定'}</h4>
+                    <div className="grid gap-2 md:grid-cols-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">週労働時間:</span>
+                        <span className="font-medium">{employer.weeklyHours}時間</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">月収見込み:</span>
+                        <span className="font-medium">{employer.monthlyIncome.toLocaleString()}円</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">通勤手当:</span>
+                        <span className="font-medium">{employer.commutingAllowance.toLocaleString()}円</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 働ける時間の推定 */}
           <div className="rounded-xl border bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold mb-4">あと働ける時間（概算）</h3>
@@ -389,7 +479,219 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          {/* 追加設定 */}
+          {/* 基本情報設定 */}
+          <section className="rounded-xl border bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">基本情報</h3>
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  生年月日
+                </label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  value={profile.birthDate || ""}
+                  onChange={(e) => setProfile({ birthDate: e.target.value })}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  在学区分
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  value={profile.studentType || ""}
+                  onChange={(e) => setProfile({ studentType: e.target.value as StudentType })}
+                >
+                  <option value="">選択してください</option>
+                  <option value="daytime">昼間制</option>
+                  <option value="evening">定時制</option>
+                  <option value="correspondence">通信制</option>
+                  <option value="leave">休学中</option>
+                  <option value="graduate">卒業予定</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  居住自治体
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  placeholder="例: 東京都新宿区"
+                  value={profile.residenceCity || ""}
+                  onChange={(e) => setProfile({ residenceCity: e.target.value })}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 保険情報設定 */}
+          <section className="rounded-xl border bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">保険情報</h3>
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  保険加入状況
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  value={profile.insuranceStatus || ""}
+                  onChange={(e) => setProfile({ insuranceStatus: e.target.value as InsuranceType })}
+                >
+                  <option value="">選択してください</option>
+                  <option value="parent_dependent">親の扶養</option>
+                  <option value="national_health">国民健康保険</option>
+                  <option value="employee_health">社会保険</option>
+                  <option value="none">未加入</option>
+                </select>
+              </div>
+              
+              {profile.insuranceStatus === "parent_dependent" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    親の保険種別
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    value={profile.parentInsuranceType || ""}
+                    onChange={(e) => setProfile({ parentInsuranceType: e.target.value as ParentInsuranceType })}
+                  >
+                    <option value="">選択してください</option>
+                    <option value="health_union">健康保険組合</option>
+                    <option value="national_health">国民健康保険</option>
+                    <option value="other">その他</option>
+                  </select>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  親との同居状況
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  value={profile.livingStatus || ""}
+                  onChange={(e) => setProfile({ livingStatus: e.target.value as LivingStatus })}
+                >
+                  <option value="">選択してください</option>
+                  <option value="living_together">同居</option>
+                  <option value="living_separately">別居</option>
+                </select>
+              </div>
+              
+              {profile.livingStatus === "living_separately" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    月額仕送り
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="例: 50000"
+                    value={profile.monthlyAllowance || ""}
+                    onChange={(e) => setProfile({ monthlyAllowance: Number(e.target.value) || undefined })}
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 勤務先情報設定 */}
+          <section className="rounded-xl border bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">勤務先情報</h3>
+            <div className="grid gap-4">
+              {profile.employers.length === 0 ? (
+                <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                  <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-3">勤務先情報がありません</p>
+                  <Link 
+                    href="/onboarding" 
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    初回設定で追加
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {profile.employers.map((employer, index) => (
+                    <div key={employer.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium">勤務先 {index + 1}: {employer.name || '未設定'}</h4>
+                        <button
+                          onClick={() => removeEmployer(employer.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">勤務先名</label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            value={employer.name}
+                            onChange={(e) => updateEmployer(employer.id, { name: e.target.value })}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">週労働時間</label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            value={employer.weeklyHours}
+                            onChange={(e) => updateEmployer(employer.id, { weeklyHours: Number(e.target.value) })}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">月収見込み</label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            value={employer.monthlyIncome}
+                            onChange={(e) => updateEmployer(employer.id, { monthlyIncome: Number(e.target.value) })}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">通勤手当</label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            value={employer.commutingAllowance}
+                            onChange={(e) => updateEmployer(employer.id, { commutingAllowance: Number(e.target.value) })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  その他の所得
+                </label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  placeholder="例: 奨学金、副業収入など"
+                  value={profile.otherIncome || ""}
+                  onChange={(e) => setProfile({ otherIncome: Number(e.target.value) || undefined })}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* その他の設定 */}
           <section className="rounded-xl border bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold mb-4">その他の設定</h3>
             <div className="grid gap-4">
