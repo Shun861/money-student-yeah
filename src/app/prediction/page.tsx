@@ -5,7 +5,6 @@ import { calculateIncomeFromSchedule } from "@/lib/rules";
 import { IncomePrediction } from "@/components/ui/IncomePrediction";
 import { 
   ArrowTrendingUpIcon, 
-  CalculatorIcon,
   ChartBarIcon,
   InformationCircleIcon
 } from "@heroicons/react/24/outline";

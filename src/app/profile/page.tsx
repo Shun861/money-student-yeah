@@ -93,7 +93,7 @@ export default function ProfilePage() {
   const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
   const setProfile = useAppStore((s) => s.setProfile);
-  const addEmployer = useAppStore((s) => s.addEmployer);
+
   const updateEmployer = useAppStore((s) => s.updateEmployer);
   const removeEmployer = useAppStore((s) => s.removeEmployer);
   const r = calculateWalls(profile, incomes);

@@ -10,8 +10,7 @@ import {
   CurrencyYenIcon,
   ChartBarIcon
 } from "@heroicons/react/24/outline";
-import { HelpToggle } from "@/components/ui/HelpToggle";
-import { helpContent } from "@/constants/helpContent";
+
 import dayjs from "dayjs";
 
 export default function SchedulePage() {
@@ -374,8 +373,7 @@ export default function SchedulePage() {
               {[103, 130, 150].map((limit) => {
                 const monthlyLimit = limit * 10000;
                 const currentIncome = calculateTotalIncome();
-                const remaining = Math.max(0, monthlyLimit - currentIncome);
-                const percentage = Math.min(100, (currentIncome / monthlyLimit) * 100);
+                                                  const percentage = Math.min(100, (currentIncome / monthlyLimit) * 100);
                 
                 return (
                   <div key={limit} className="flex items-center justify-between">
