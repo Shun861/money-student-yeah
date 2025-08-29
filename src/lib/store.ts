@@ -7,6 +7,7 @@ export type UserProfile = {
 	isParentDependent?: boolean;
 	employerSize?: EmployerSize;
 	defaultHourlyWage?: number; // 円/時
+    bracket?: 103 | 130 | 150;
 };
 
 export type IncomeEntry = {
@@ -41,6 +42,7 @@ export const useAppStore = create<AppState>((set) => ({
 		isParentDependent: undefined,
 		employerSize: "unknown",
 		defaultHourlyWage: undefined,
+        bracket: 103,
 	},
 	incomes: [],
 	shifts: [],

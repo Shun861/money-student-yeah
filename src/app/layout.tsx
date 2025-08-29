@@ -36,6 +36,7 @@ export default function RootLayout({
                 <Link href="/schedule" className="hover:text-black">シフト</Link>
                 <Link href="/alerts" className="hover:text-black">アラート</Link>
                 <Link href="/report" className="hover:text-black">レポート</Link>
+                <Link href="/settings" className="hover:text-black">設定</Link>
               </div>
             </nav>
           </header>

@@ -16,10 +16,10 @@ export default function ReportPage() {
         <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
           <div>累計収入</div>
           <div className="text-right font-semibold">{r.totalIncomeYTD.toLocaleString()} 円</div>
-          <div>103万円まで残り</div>
-          <div className="text-right font-semibold">{r.remainingTo103.toLocaleString()} 円</div>
-          <div>130万円まで残り</div>
-          <div className="text-right font-semibold">{r.remainingTo130.toLocaleString()} 円</div>
+          <div>{(profile.bracket ?? 103)}万円まで残り</div>
+          <div className="text-right font-semibold">{r.remainingToLimit.toLocaleString()} 円</div>
+          <div>使用率</div>
+          <div className="text-right font-semibold">{r.percentUsed}%</div>
         </div>
       </div>
       <button className="rounded bg-black text-white px-4 py-2 text-sm w-fit" onClick={() => window.print()}>PDFとして保存（印刷）</button>

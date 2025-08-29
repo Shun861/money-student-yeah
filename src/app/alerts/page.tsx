@@ -10,8 +10,7 @@ export default function AlertsPage() {
   const r = calculateWalls(profile, incomes, shifts);
 
   const alerts: string[] = [];
-  if (r.remainingTo103 <= 5000) alerts.push(`103万円まであと${r.remainingTo103.toLocaleString()}円`);
-  if (r.remainingTo130 <= 5000) alerts.push(`130万円まであと${r.remainingTo130.toLocaleString()}円`);
+  if (r.remainingToLimit <= 5000) alerts.push(`${profile.bracket ?? 103}万円まであと${r.remainingToLimit.toLocaleString()}円`);
 
   return (
     <div className="grid gap-6">

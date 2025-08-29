@@ -5,8 +5,8 @@ export type WallType = "103" | "130";
 
 export type CalcResult = {
 	totalIncomeYTD: number;
-	remainingTo103: number;
-	remainingTo130: number;
+	remainingToLimit: number;
+	percentUsed: number; // 0-100
 	estimatedHoursLeftBy103: number; // using default hourly wage
 	estimatedHoursLeftBy130: number;
 };
@@ -20,20 +20,18 @@ export function calculateWalls(
 	const incomesThisYear = incomes.filter((i) => dayjs(i.date).year() === year);
 	const totalIncomeYTD = incomesThisYear.reduce((sum, i) => sum + i.amount, 0);
 
-	const limit103 = 1030000;
-	const limit130 = 1300000;
-
-	const remainingTo103 = Math.max(0, limit103 - totalIncomeYTD);
-	const remainingTo130 = Math.max(0, limit130 - totalIncomeYTD);
+	const limit = (profile.bracket ?? 103) * 10000; // 万円入力を円に
+	const remainingToLimit = Math.max(0, limit - totalIncomeYTD);
+	const percentUsed = Math.min(100, Math.round((totalIncomeYTD / limit) * 100));
 
 	const hourly = profile.defaultHourlyWage || 0;
-	const estimatedHoursLeftBy103 = hourly > 0 ? Math.floor(remainingTo103 / hourly) : 0;
-	const estimatedHoursLeftBy130 = hourly > 0 ? Math.floor(remainingTo130 / hourly) : 0;
+	const estimatedHoursLeftBy103 = hourly > 0 ? Math.floor(Math.max(0, 1030000 - totalIncomeYTD) / hourly) : 0;
+	const estimatedHoursLeftBy130 = hourly > 0 ? Math.floor(Math.max(0, 1300000 - totalIncomeYTD) / hourly) : 0;
 
 	return {
 		totalIncomeYTD,
-		remainingTo103,
-		remainingTo130,
+		remainingToLimit,
+		percentUsed,
 		estimatedHoursLeftBy103,
 		estimatedHoursLeftBy130,
 	};
