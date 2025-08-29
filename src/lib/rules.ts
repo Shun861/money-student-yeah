@@ -1,15 +1,5 @@
 import dayjs from "dayjs";
-import { IncomeEntry, UserProfile } from "./store";
-
-export type WallType = "103" | "130";
-
-export type CalcResult = {
-	totalIncomeYTD: number;
-	remainingToLimit: number;
-	percentUsed: number; // 0-100
-	estimatedHoursLeftBy103: number; // using default hourly wage
-	estimatedHoursLeftBy130: number;
-};
+import type { IncomeEntry, UserProfile, CalcResult } from "@/types";
 
 export function calculateWalls(
 	profile: UserProfile,

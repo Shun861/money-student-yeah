@@ -1,5 +1,6 @@
 "use client";
-import { useAppStore, type StudentType, type InsuranceType, type ParentInsuranceType, type LivingStatus } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
+import type { StudentType, InsuranceType, ParentInsuranceType, LivingStatus, BracketType } from "@/types";
 import { calculateWalls } from "@/lib/rules";
 import { useState } from "react";
 import { 
@@ -19,7 +20,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
-type BracketType = 103 | 130 | 150;
+
 
 interface BracketInfo {
   value: BracketType;

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAppStore, type EmployerSize, type StudentType, type InsuranceType, type ParentInsuranceType, type LivingStatus, type Employer } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
+import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
 import { 
   UserIcon, 
   ShieldCheckIcon, 
@@ -11,40 +12,17 @@ import {
   TrashIcon,
   CheckIcon
 } from "@heroicons/react/24/outline";
-
-type Step = 1 | 2 | 3;
-
-const studentTypeOptions = [
-  { value: "daytime", label: "昼間制", description: "通常の大学・専門学校" },
-  { value: "evening", label: "定時制", description: "夜間の大学・専門学校" },
-  { value: "correspondence", label: "通信制", description: "通信教育" },
-  { value: "leave", label: "休学中", description: "現在休学中" },
-  { value: "graduate", label: "卒業予定", description: "今年度中に卒業予定" }
-];
-
-const insuranceOptions = [
-  { value: "parent_dependent", label: "親の扶養", description: "親の健康保険の被扶養者" },
-  { value: "national_health", label: "国民健康保険", description: "自分で国民健康保険に加入" },
-  { value: "employee_health", label: "社会保険", description: "勤務先の社会保険に加入" },
-  { value: "none", label: "未加入", description: "現在保険に加入していない" }
-];
-
-const parentInsuranceOptions = [
-  { value: "health_union", label: "健康保険組合", description: "会社の健康保険組合" },
-  { value: "national_health", label: "国民健康保険", description: "親が国民健康保険" },
-  { value: "other", label: "その他", description: "共済組合など" }
-];
-
-const livingStatusOptions = [
-  { value: "living_together", label: "同居", description: "親と一緒に住んでいる" },
-  { value: "living_separately", label: "別居", description: "親と別々に住んでいる" }
-];
-
-const employerSizeOptions = [
-  { value: "small", label: "小規模", description: "従業員50人未満" },
-  { value: "medium", label: "中規模", description: "従業員50〜500人" },
-  { value: "large", label: "大規模", description: "従業員500人以上" }
-];
+import { HelpToggle } from "@/components/ui/HelpToggle";
+import { StepIndicator } from "@/components/ui/StepIndicator";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { 
+  studentTypeOptions, 
+  insuranceOptions, 
+  parentInsuranceOptions, 
+  livingStatusOptions, 
+  employerSizeOptions 
+} from "@/constants/options";
+import { helpContent } from "@/constants/helpContent";
 
 export default function OnboardingPage() {
   const profile = useAppStore((s) => s.profile);
@@ -56,15 +34,27 @@ export default function OnboardingPage() {
   const [showAllowanceInput, setShowAllowanceInput] = useState(
     profile.livingStatus === "living_separately"
   );
-  
-  // ヘルプ表示の状態管理
-  const [showBirthDateHelp, setShowBirthDateHelp] = useState(false);
-  const [showStudentTypeHelp, setShowStudentTypeHelp] = useState(false);
-  const [showResidenceHelp, setShowResidenceHelp] = useState(false);
-  const [showInsuranceHelp, setShowInsuranceHelp] = useState(false);
-  const [showParentInsuranceHelp, setShowParentInsuranceHelp] = useState(false);
-  const [showLivingStatusHelp, setShowLivingStatusHelp] = useState(false);
-  const [showAllowanceHelp, setShowAllowanceHelp] = useState(false);
+
+  const steps = [
+    {
+      id: 1,
+      title: "基本情報",
+      description: "年齢・在学状況",
+      icon: UserIcon
+    },
+    {
+      id: 2,
+      title: "保険情報",
+      description: "加入状況・扶養",
+      icon: ShieldCheckIcon
+    },
+    {
+      id: 3,
+      title: "収入情報",
+      description: "勤務先・収入",
+      icon: CurrencyYenIcon
+    }
+  ];
 
   // 同居状況の変更を監視
   useEffect(() => {
@@ -108,10 +98,6 @@ export default function OnboardingPage() {
     removeEmployer(id);
   };
 
-  const getStepProgress = () => {
-    return (currentStep / 3) * 100;
-  };
-
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
   const isStep3Complete = profile.employers.length > 0;
@@ -124,38 +110,8 @@ export default function OnboardingPage() {
         <p className="text-gray-600">2025年度の最新制度に基づいて、あなたの扶養状況を正確に判定します</p>
       </div>
 
-      {/* プログレスバー */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">進捗: {currentStep}/3</span>
-          <span className="text-sm text-gray-500">{Math.round(getStepProgress())}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${getStepProgress()}%` }}
-          />
-        </div>
-      </div>
-
-      {/* ステップインジケーター */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className={`text-center p-4 rounded-lg ${currentStep >= 1 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'} border`}>
-          <UserIcon className={`w-8 h-8 mx-auto mb-2 ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`} />
-          <div className="font-medium text-sm">基本情報</div>
-          <div className="text-xs text-gray-500">年齢・在学状況</div>
-        </div>
-        <div className={`text-center p-4 rounded-lg ${currentStep >= 2 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'} border`}>
-          <ShieldCheckIcon className={`w-8 h-8 mx-auto mb-2 ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`} />
-          <div className="font-medium text-sm">保険情報</div>
-          <div className="text-xs text-gray-500">加入状況・扶養</div>
-        </div>
-        <div className={`text-center p-4 rounded-lg ${currentStep >= 3 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'} border`}>
-          <CurrencyYenIcon className={`w-8 h-8 mx-auto mb-2 ${currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`} />
-          <div className="font-medium text-sm">収入情報</div>
-          <div className="text-xs text-gray-500">勤務先・収入</div>
-        </div>
-      </div>
+      <ProgressBar current={currentStep} total={3} />
+      <StepIndicator steps={steps} currentStep={currentStep} />
 
       {/* ステップ1: 基本情報 */}
       {currentStep === 1 && (
@@ -166,18 +122,11 @@ export default function OnboardingPage() {
           </h2>
           
           <div className="grid gap-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  生年月日 <span className="text-red-500">*</span>
-                </label>
-                <button
-                  onClick={() => setShowBirthDateHelp(!showBirthDateHelp)}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  {showBirthDateHelp ? '解説を隠す' : '解説を見る'}
-                </button>
-              </div>
+            <HelpToggle
+              label="生年月日"
+              helpContent={helpContent.birthDate}
+              required
+            >
               <input
                 type="date"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -186,26 +135,13 @@ export default function OnboardingPage() {
                 max={new Date().toISOString().split('T')[0]}
               />
               <p className="text-xs text-gray-500 mt-1">年齢に基づいて扶養控除の適用可否を判定します</p>
-              {showBirthDateHelp && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                  <p><strong>なぜ必要？</strong></p>
-                  <p>年齢によって扶養控除の適用可否が変わります。16歳未満は扶養控除の対象外、16歳以上23歳未満は特定扶養控除の対象となります。</p>
-                </div>
-              )}
-            </div>
+            </HelpToggle>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  在学区分 <span className="text-red-500">*</span>
-                </label>
-                <button
-                  onClick={() => setShowStudentTypeHelp(!showStudentTypeHelp)}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  {showStudentTypeHelp ? '解説を隠す' : '解説を見る'}
-                </button>
-              </div>
+            <HelpToggle
+              label="在学区分"
+              helpContent={helpContent.studentType}
+              required
+            >
               <div className="grid gap-3">
                 {studentTypeOptions.map((option) => (
                   <label key={option.value} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
@@ -224,26 +160,13 @@ export default function OnboardingPage() {
                   </label>
                 ))}
               </div>
-              {showStudentTypeHelp && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                  <p><strong>なぜ重要？</strong></p>
-                  <p>在学区分によって勤労学生控除の適用や、扶養控除の判定基準が変わります。特に定時制・通信制は勤労学生控除の対象外となる場合があります。</p>
-                </div>
-              )}
-            </div>
+            </HelpToggle>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  居住自治体 <span className="text-red-500">*</span>
-                </label>
-                <button
-                  onClick={() => setShowResidenceHelp(!showResidenceHelp)}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  {showResidenceHelp ? '解説を隠す' : '解説を見る'}
-                </button>
-              </div>
+            <HelpToggle
+              label="居住自治体"
+              helpContent={helpContent.residenceCity}
+              required
+            >
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -252,13 +175,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setProfile({ residenceCity: e.target.value })}
               />
               <p className="text-xs text-gray-500 mt-1">住民税の非課税基準判定に使用します</p>
-              {showResidenceHelp && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                  <p><strong>なぜ必要？</strong></p>
-                  <p>住民税の非課税基準は自治体によって異なります。正確な判定のために居住地の情報が必要です。</p>
-                </div>
-              )}
-            </div>
+            </HelpToggle>
           </div>
         </div>
       )}
