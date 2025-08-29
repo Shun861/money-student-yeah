@@ -32,6 +32,9 @@ export default function RootLayout({
 							<Link href="/" className="font-semibold">扶養調整</Link>
 							<div className="flex items-center gap-3 text-gray-600">
 								<Link href="/" className="hover:text-black">ホーム</Link>
+								<Link href="/schedule" className="hover:text-black">勤務管理</Link>
+								<Link href="/simulation" className="hover:text-black">シミュレーション</Link>
+								<Link href="/prediction" className="hover:text-black">収入予測</Link>
 								<Link href="/profile" className="hover:text-black">マイページ</Link>
 							</div>
 						</nav>

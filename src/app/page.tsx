@@ -8,7 +8,9 @@ import {
   CheckCircleIcon,
   InformationCircleIcon,
   PlusIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  CalculatorIcon,
+  ArrowTrendingUpIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -169,14 +171,59 @@ export default function Home() {
       {/* クイックアクション */}
       <div className="alumnote-card p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-6">クイックアクション</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Link 
+            href="/schedule" 
+            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <ClockIcon className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">勤務管理</div>
+                <div className="text-sm text-gray-600">勤務時間で収入計算</div>
+              </div>
+            </div>
+          </Link>
+          
+          <Link 
+            href="/simulation" 
+            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-orange-100 rounded-xl">
+                <CalculatorIcon className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">シミュレーション</div>
+                <div className="text-sm text-gray-600">扶養超過を予測</div>
+              </div>
+            </div>
+          </Link>
+          
+          <Link 
+            href="/prediction" 
+            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-100 rounded-xl">
+                <ArrowTrendingUpIcon className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">収入予測</div>
+                <div className="text-sm text-gray-600">将来の収入を予測</div>
+              </div>
+            </div>
+          </Link>
+          
           <Link 
             href="/income" 
             className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <PlusIcon className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-green-100 rounded-xl">
+                <PlusIcon className="w-6 h-6 text-green-600" />
               </div>
               <div>
                 <div className="font-semibold text-gray-900">収入を記録</div>
@@ -190,8 +237,8 @@ export default function Home() {
             className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <ChartBarIcon className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <ChartBarIcon className="w-6 h-6 text-purple-600" />
               </div>
               <div>
                 <div className="font-semibold text-gray-900">詳細レポート</div>

@@ -53,6 +53,18 @@ export type ShiftEntry = {
   date: string; // YYYY-MM-DD
   hours: number; // 勤務予定時間
   hourlyWage?: number; // 未指定なら profile.defaultHourlyWage を使用
+  employerId?: string; // 勤務先ID
+  notes?: string; // メモ
+};
+
+export type WorkSchedule = {
+  id: string;
+  employerId: string;
+  weeklyHours: number; // 週間勤務時間
+  hourlyWage: number; // 時給
+  frequency: 'weekly' | 'monthly'; // 頻度
+  startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD（継続中は未設定）
 };
 
 // 計算結果型定義
