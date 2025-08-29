@@ -1,7 +1,16 @@
 "use client";
 import { useAppStore } from "@/lib/store";
 import { calculateWalls } from "@/lib/rules";
-import { CurrencyYenIcon, ClockIcon, ExclamationTriangleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { 
+  CurrencyYenIcon, 
+  ClockIcon, 
+  ExclamationTriangleIcon, 
+  CheckCircleIcon,
+  InformationCircleIcon,
+  PlusIcon,
+  ChartBarIcon
+} from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 export default function Home() {
   const profile = useAppStore((s) => s.profile);
@@ -21,6 +30,33 @@ export default function Home() {
   };
 
   const StatusIcon = getStatusIcon(r.percentUsed);
+
+  // アラートの生成
+  const alerts: Array<{ type: 'warning' | 'info' | 'success'; message: string; icon: any }> = [];
+  
+  if (r.remainingToLimit <= 5000) {
+    alerts.push({
+      type: 'warning',
+      message: `${profile.bracket ?? 103}万円まであと${r.remainingToLimit.toLocaleString()}円です`,
+      icon: ExclamationTriangleIcon
+    });
+  }
+  
+  if (r.percentUsed > 80) {
+    alerts.push({
+      type: 'info',
+      message: `現在${r.percentUsed}%使用中です。注意深く管理しましょう。`,
+      icon: InformationCircleIcon
+    });
+  }
+  
+  if (r.percentUsed < 50) {
+    alerts.push({
+      type: 'success',
+      message: `順調です！まだ${r.remainingToLimit.toLocaleString()}円余裕があります。`,
+      icon: CheckCircleIcon
+    });
+  }
 
   return (
     <div className="grid gap-6">
@@ -70,6 +106,65 @@ export default function Home() {
       </div>
 
       <ProgressBar percent={r.percentUsed} />
+
+      {/* アラートセクション */}
+      {alerts.length > 0 && (
+        <div className="rounded-xl border bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
+            <h3 className="text-lg font-semibold">アラート</h3>
+            <div className="text-sm text-gray-500">({alerts.length}件)</div>
+          </div>
+          <div className="grid gap-3">
+            {alerts.map((alert, idx) => {
+              const Icon = alert.icon;
+              const colors = {
+                warning: 'bg-red-50 border-red-200 text-red-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800',
+                success: 'bg-green-50 border-green-200 text-green-800'
+              };
+              return (
+                <div key={idx} className={`rounded-lg border p-4 flex items-start gap-3 ${colors[alert.type]}`}>
+                  <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm font-medium">{alert.message}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* クイックアクション */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4">クイックアクション</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link 
+            href="/income" 
+            className="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <PlusIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <div className="font-medium">収入を記録</div>
+              <div className="text-sm text-gray-600">新しい収入を追加</div>
+            </div>
+          </Link>
+          
+          <Link 
+            href="/profile" 
+            className="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="p-2 bg-green-100 rounded-lg">
+              <ChartBarIcon className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <div className="font-medium">詳細レポート</div>
+              <div className="text-sm text-gray-600">グラフと分析を見る</div>
+            </div>
+          </Link>
+        </div>
+      </div>
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
