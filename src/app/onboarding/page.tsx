@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppStore, type EmployerSize, type StudentType, type InsuranceType, type ParentInsuranceType, type LivingStatus, type Employer } from "@/lib/store";
 import { 
   UserIcon, 
@@ -53,7 +53,9 @@ export default function OnboardingPage() {
   const removeEmployer = useAppStore((s) => s.removeEmployer);
   
   const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [showAllowanceInput, setShowAllowanceInput] = useState(false);
+  const [showAllowanceInput, setShowAllowanceInput] = useState(
+    profile.livingStatus === "living_separately"
+  );
   
   // ヘルプ表示の状態管理
   const [showBirthDateHelp, setShowBirthDateHelp] = useState(false);
@@ -63,6 +65,11 @@ export default function OnboardingPage() {
   const [showParentInsuranceHelp, setShowParentInsuranceHelp] = useState(false);
   const [showLivingStatusHelp, setShowLivingStatusHelp] = useState(false);
   const [showAllowanceHelp, setShowAllowanceHelp] = useState(false);
+
+  // 同居状況の変更を監視
+  useEffect(() => {
+    setShowAllowanceInput(profile.livingStatus === "living_separately");
+  }, [profile.livingStatus]);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -327,10 +334,7 @@ export default function OnboardingPage() {
                       name="livingStatus"
                       value={option.value}
                       checked={profile.livingStatus === option.value}
-                      onChange={(e) => {
-                        setProfile({ livingStatus: e.target.value as LivingStatus });
-                        setShowAllowanceInput(e.target.value === "living_separately");
-                      }}
+                      onChange={(e) => setProfile({ livingStatus: e.target.value as LivingStatus })}
                       className="mt-1"
                     />
                     <div>
