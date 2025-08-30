@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
+import Link from "next/link";
 import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
 import { 
   UserIcon, 
@@ -99,7 +100,7 @@ export default function OnboardingPage() {
 
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
-  const isStep3Complete = profile.employers.length > 0;
+  const isStep3Complete = profile.employers.length > 0 && profile.termsAccepted;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -437,6 +438,35 @@ export default function OnboardingPage() {
               />
               <p className="text-xs text-gray-500 mt-1">奨学金、副業収入、投資収入などを含みます</p>
             </div>
+
+            {/* 利用規約同意 */}
+            <div className="border-t pt-6 mt-6">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="termsAccepted"
+                  checked={profile.termsAccepted || false}
+                  onChange={(e) => setProfile({ termsAccepted: e.target.checked })}
+                  className="mt-1"
+                  required
+                />
+                <div>
+                  <label htmlFor="termsAccepted" className="text-sm font-medium text-gray-700">
+                    利用規約とプライバシーポリシーに同意します <span className="text-red-500">*</span>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    <Link href="/terms" className="text-blue-600 hover:text-blue-800" target="_blank">
+                      利用規約
+                    </Link>
+                    と
+                    <Link href="/privacy" className="text-blue-600 hover:text-blue-800" target="_blank">
+                      プライバシーポリシー
+                    </Link>
+                    を確認し、同意してください。
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -487,7 +517,7 @@ export default function OnboardingPage() {
           </button>
         ) : (
           <button
-            onClick={() => router.push('/')}
+            onClick={() => window.location.href = '/'}
             disabled={!isStep3Complete}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
