@@ -15,6 +15,7 @@ import {
   ChevronRightIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
 
 export default function Home() {
   const profile = useAppStore((s) => s.profile);
@@ -63,233 +64,233 @@ export default function Home() {
   }
 
   return (
-    <div className="grid gap-8">
-      {/* ヒーローセクション */}
-      <div className="alumnote-gradient rounded-2xl p-8 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">扶養調整ダッシュボード</h1>
-            <div className="text-blue-100 text-lg">選択中の扶養枠: {profile.bracket}万円</div>
-          </div>
-          <div className={`flex items-center gap-3 px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm`}>
-            <StatusIcon className="w-6 h-6" />
-            <span className="font-medium">
-              {r.percentUsed < 70 ? '安全' : r.percentUsed < 90 ? '注意' : '危険'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="alumnote-card p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <CurrencyYenIcon className="w-6 h-6 text-blue-600" />
-            </div>
+    <div className="p-6">
+      <div className="grid gap-6">
+        {/* ヒーローセクション */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-600">今年の累計収入</div>
-              <div className="text-2xl font-bold text-gray-900">{r.totalIncomeYTD.toLocaleString()} 円</div>
+              <h1 className="text-3xl font-bold mb-2">扶養調整ダッシュボード</h1>
+              <div className="text-blue-100 text-lg">選択中の扶養枠: {profile.bracket}万円</div>
+            </div>
+            <div className={`flex items-center gap-3 px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm`}>
+              <StatusIcon className="w-6 h-6" />
+              <span className="font-medium">
+                {r.percentUsed < 70 ? '安全' : r.percentUsed < 90 ? '注意' : '危険'}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="alumnote-card p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <CheckCircleIcon className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">残り稼げる額</div>
-              <div className="text-2xl font-bold text-gray-900">{r.remainingToLimit.toLocaleString()} 円</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="alumnote-card p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-orange-100 rounded-xl">
-              <ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-600">使用率</div>
-              <div className={`text-2xl font-bold ${getStatusColor(r.percentUsed)}`}>{r.percentUsed}%</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="alumnote-card p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-900">扶養枠の使用状況</h3>
-          <div className="text-2xl font-bold text-blue-600">{r.percentUsed}%</div>
-        </div>
-        <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-4">
-          <div 
-            className={`h-6 ${
-              r.percentUsed < 70 ? 'bg-green-500' : 
-              r.percentUsed < 90 ? 'bg-yellow-500' : 'bg-red-500'
-            } rounded-full transition-all duration-500 ease-out`} 
-            style={{ width: `${r.percentUsed}%` }} 
-          />
-        </div>
-        <div className="flex justify-between text-sm text-gray-500">
-          <span>0%</span>
-          <span>{profile.bracket ?? 103}万円</span>
-          <span>100%</span>
-        </div>
-      </div>
-
-      {/* アラートセクション */}
-      {alerts.length > 0 && (
-        <div className="alumnote-card p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900">アラート</h3>
-            <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-600">
-              {alerts.length}件
-            </div>
-          </div>
-          <div className="grid gap-4">
-            {alerts.map((alert, idx) => {
-              const Icon = alert.icon;
-              const colors = {
-                warning: 'bg-red-50 border-red-200 text-red-800',
-                info: 'bg-blue-50 border-blue-200 text-blue-800',
-                success: 'bg-green-50 border-green-200 text-green-800'
-              };
-              return (
-                <div key={idx} className={`rounded-xl border p-4 flex items-start gap-4 ${colors[alert.type]}`}>
-                  <Icon className="w-6 h-6 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm font-medium">{alert.message}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 初回設定の案内 */}
-      {!profile.birthDate && (
-        <div className="alumnote-card p-6 bg-blue-50 border-blue-200">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <UserIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">初回設定が必要です</h3>
-              <p className="text-gray-600">扶養状況を正確に判定するために、基本情報を設定してください</p>
-            </div>
-          </div>
-          <Link 
-            href="/onboarding" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            初回設定を開始
-            <ChevronRightIcon className="w-4 h-4" />
-          </Link>
-        </div>
-      )}
-
-      {/* クイックアクション */}
-      <div className="alumnote-card p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">クイックアクション</h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Link 
-            href="/schedule" 
-            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
+        {/* 統計カード */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card hover>
+            <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-blue-100 rounded-xl">
-                <ClockIcon className="w-6 h-6 text-blue-600" />
+                <CurrencyYenIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <div className="font-semibold text-gray-900">勤務管理</div>
-                <div className="text-sm text-gray-600">勤務時間で収入計算</div>
+                <div className="text-sm font-medium text-gray-600">今年の累計収入</div>
+                <div className="text-2xl font-bold text-gray-900">{r.totalIncomeYTD.toLocaleString()} 円</div>
               </div>
             </div>
-          </Link>
-          
-          <Link 
-            href="/simulation" 
-            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-orange-100 rounded-xl">
-                <CalculatorIcon className="w-6 h-6 text-orange-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">シミュレーション</div>
-                <div className="text-sm text-gray-600">扶養超過を予測</div>
-              </div>
-            </div>
-          </Link>
-          
-          <Link 
-            href="/prediction" 
-            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-100 rounded-xl">
-                <ArrowTrendingUpIcon className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">収入予測</div>
-                <div className="text-sm text-gray-600">将来の収入を予測</div>
-              </div>
-            </div>
-          </Link>
-          
-          <Link 
-            href="/income" 
-            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <PlusIcon className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">収入を記録</div>
-                <div className="text-sm text-gray-600">新しい収入を追加</div>
-              </div>
-            </div>
-          </Link>
-          
-          <Link 
-            href="/profile" 
-            className="alumnote-card p-6 hover:shadow-lg transition-all duration-200"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-xl">
-                <ChartBarIcon className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">詳細レポート</div>
-                <div className="text-sm text-gray-600">グラフと分析を見る</div>
-              </div>
-            </div>
-          </Link>
-        </div>
-      </div>
+          </Card>
 
-      <div className="alumnote-card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-orange-100 rounded-xl">
-            <ClockIcon className="w-6 h-6 text-orange-600" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900">あと働ける時間（概算）</h3>
+          <Card hover>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-green-100 rounded-xl">
+                <CheckCircleIcon className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-600">残り稼げる額</div>
+                <div className="text-2xl font-bold text-gray-900">{r.remainingToLimit.toLocaleString()} 円</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card hover>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-orange-100 rounded-xl">
+                <ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-600">使用率</div>
+                <div className={`text-2xl font-bold ${getStatusColor(r.percentUsed)}`}>{r.percentUsed}%</div>
+              </div>
+            </div>
+          </Card>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="text-center p-6 bg-gray-50 rounded-xl">
-            <div className="text-3xl font-bold text-gray-900 mb-2">{r.estimatedHoursLeftBy103}</div>
-            <div className="text-sm text-gray-600">103万基準（時間）</div>
+
+        {/* プログレスバー */}
+        <Card>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-900">扶養枠の使用状況</h3>
+            <div className="text-2xl font-bold text-blue-600">{r.percentUsed}%</div>
           </div>
-          <div className="text-center p-6 bg-gray-50 rounded-xl">
-            <div className="text-3xl font-bold text-gray-900 mb-2">{r.estimatedHoursLeftBy130}</div>
-            <div className="text-sm text-gray-600">130万基準（時間）</div>
+          <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden mb-4">
+            <div 
+              className={`h-6 ${
+                r.percentUsed < 70 ? 'bg-green-500' : 
+                r.percentUsed < 90 ? 'bg-yellow-500' : 'bg-red-500'
+              } rounded-full transition-all duration-500 ease-out`} 
+              style={{ width: `${r.percentUsed}%` }} 
+            />
           </div>
-        </div>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>0%</span>
+            <span>{profile.bracket ?? 103}万円</span>
+            <span>100%</span>
+          </div>
+        </Card>
+
+        {/* アラートセクション */}
+        {alerts.length > 0 && (
+          <Card>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">アラート</h3>
+              <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-600">
+                {alerts.length}件
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {alerts.map((alert, idx) => {
+                const Icon = alert.icon;
+                const colors = {
+                  warning: 'bg-red-50 border-red-200 text-red-800',
+                  info: 'bg-blue-50 border-blue-200 text-blue-800',
+                  success: 'bg-green-50 border-green-200 text-green-800'
+                };
+                return (
+                  <div key={idx} className={`rounded-xl border p-4 flex items-start gap-4 ${colors[alert.type]}`}>
+                    <Icon className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm font-medium">{alert.message}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
+        {/* 初回設定の案内 */}
+        {!profile.birthDate && (
+          <Card className="bg-blue-50 border-blue-200">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <UserIcon className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">初回設定が必要です</h3>
+                <p className="text-gray-600">扶養状況を正確に判定するために、基本情報を設定してください</p>
+              </div>
+            </div>
+            <Link 
+              href="/onboarding" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              初回設定を開始
+              <ChevronRightIcon className="w-4 h-4" />
+            </Link>
+          </Card>
+        )}
+
+        {/* クイックアクション */}
+        <Card>
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">クイックアクション</h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <Link href="/schedule">
+              <Card hover className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-100 rounded-xl">
+                    <ClockIcon className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">勤務管理</div>
+                    <div className="text-sm text-gray-600">勤務時間で収入計算</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+            
+            <Link href="/simulation">
+              <Card hover className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-orange-100 rounded-xl">
+                    <CalculatorIcon className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">シミュレーション</div>
+                    <div className="text-sm text-gray-600">扶養超過を予測</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+            
+            <Link href="/prediction">
+              <Card hover className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-indigo-100 rounded-xl">
+                    <ArrowTrendingUpIcon className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">収入予測</div>
+                    <div className="text-sm text-gray-600">将来の収入を予測</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+            
+            <Link href="/income">
+              <Card hover className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <PlusIcon className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">収入を記録</div>
+                    <div className="text-sm text-gray-600">新しい収入を追加</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+            
+            <Link href="/profile">
+              <Card hover className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-purple-100 rounded-xl">
+                    <ChartBarIcon className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">詳細レポート</div>
+                    <div className="text-sm text-gray-600">グラフと分析を見る</div>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          </div>
+        </Card>
+
+        {/* 働ける時間 */}
+        <Card>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-orange-100 rounded-xl">
+              <ClockIcon className="w-6 h-6 text-orange-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900">あと働ける時間（概算）</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="text-center p-6 bg-gray-50 rounded-xl">
+              <div className="text-3xl font-bold text-gray-900 mb-2">{r.estimatedHoursLeftBy103}</div>
+              <div className="text-sm text-gray-600">103万基準（時間）</div>
+            </div>
+            <div className="text-center p-6 bg-gray-50 rounded-xl">
+              <div className="text-3xl font-bold text-gray-900 mb-2">{r.estimatedHoursLeftBy130}</div>
+              <div className="text-sm text-gray-600">130万基準（時間）</div>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
