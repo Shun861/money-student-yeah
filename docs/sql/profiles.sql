@@ -15,6 +15,17 @@ create table if not exists public.profiles (
   bracket integer check (bracket in (103,130,150))
 );
 
+-- Add onboarding flag if missing
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns 
+    where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_completed'
+  ) then
+    alter table public.profiles add column onboarding_completed boolean not null default false;
+  end if;
+end $$;
+
 -- 2) Timestamp update trigger
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
