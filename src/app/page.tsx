@@ -10,7 +10,9 @@ import {
   PlusIcon,
   ChartBarIcon,
   CalculatorIcon,
-  ArrowTrendingUpIcon
+  ArrowTrendingUpIcon,
+  UserIcon,
+  ChevronRightIcon
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
@@ -165,6 +167,28 @@ export default function Home() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* 初回設定の案内 */}
+      {!profile.birthDate && (
+        <div className="alumnote-card p-6 bg-blue-50 border-blue-200">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <UserIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">初回設定が必要です</h3>
+              <p className="text-gray-600">扶養状況を正確に判定するために、基本情報を設定してください</p>
+            </div>
+          </div>
+          <Link 
+            href="/onboarding" 
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            初回設定を開始
+            <ChevronRightIcon className="w-4 h-4" />
+          </Link>
         </div>
       )}
 
