@@ -39,6 +39,9 @@ export type UserProfile = {
   employerSize?: EmployerSize;
   defaultHourlyWage?: number; // 円/時
   bracket?: BracketType;
+  
+  // 利用規約同意
+  termsAccepted?: boolean;
 };
 
 export type IncomeEntry = {
