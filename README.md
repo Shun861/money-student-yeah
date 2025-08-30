@@ -90,6 +90,27 @@ npm run dev
     - 認証後のAPI/クライアントから自分の row のみ取得/更新可能
 
 注意: 本番適用時は必要に応じてカラムを拡張し、マイグレーション管理（例: `supabase/migrations`）への移行を検討してください。
+
+### 環境変数
+Next.js 側で以下が必要です。
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+APIルート（/api/profile）はSSRのSupabaseクライアントでCookieベースのセッションを使用します。ログイン連携（Issue #9）後に動作します。
+
+## Auth 配線（Issue #19）
+
+- 依存: `@supabase/supabase-js`, `@supabase/ssr`
+- クライアント: `src/lib/supabaseClient.ts`
+- サーバ: `src/lib/supabaseServer.ts`（Cookie連携済み）
+- 環境変数チェック: `src/lib/env.ts`
+- 雛形: `.env.example`
+
+動作確認（最小）:
+- 任意のServer ComponentやAPI Route内で `createSupabaseServerClient().auth.getUser()` がエラーなく実行でき、未ログイン時は401などのハンドリングが行えること。
 ```
 
 ### ビルド
