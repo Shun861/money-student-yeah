@@ -78,6 +78,20 @@ npm install
 npm run dev
 ```
 
+## Supabase: profiles テーブルとRLSのセットアップ（Issue #18）
+
+1. Supabase のプロジェクトを用意し、SQL Editor を開く
+2. `docs/sql/profiles.sql` の内容を貼り付けて実行
+    - `public.profiles` 作成
+    - RLS 有効化とポリシー（select/insert/update 自分のみ）
+    - `auth.users` への insert トリガーで `profiles` 自動作成
+3. 動作確認
+    - サインアップ → `public.profiles` に該当ユーザーの行が自動作成
+    - 認証後のAPI/クライアントから自分の row のみ取得/更新可能
+
+注意: 本番適用時は必要に応じてカラムを拡張し、マイグレーション管理（例: `supabase/migrations`）への移行を検討してください。
+```
+
 ### ビルド
 ```bash
 # 本番ビルド
