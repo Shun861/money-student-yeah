@@ -1,58 +1,501 @@
 "use client";
-import { useAppStore, type EmployerSize } from "@/lib/store";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/lib/store";
+import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
+import { 
+  UserIcon, 
+  ShieldCheckIcon, 
+  CurrencyYenIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
+  PlusIcon,
+  TrashIcon,
+  CheckIcon
+} from "@heroicons/react/24/outline";
+import { HelpToggle } from "@/components/ui/HelpToggle";
+import { StepIndicator } from "@/components/ui/StepIndicator";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { 
+  studentTypeOptions, 
+  insuranceOptions, 
+  parentInsuranceOptions, 
+  livingStatusOptions, 
+  employerSizeOptions 
+} from "@/constants/options";
+import { helpContent } from "@/constants/helpContent";
 
 export default function OnboardingPage() {
   const profile = useAppStore((s) => s.profile);
   const setProfile = useAppStore((s) => s.setProfile);
+  const addEmployer = useAppStore((s) => s.addEmployer);
+  const removeEmployer = useAppStore((s) => s.removeEmployer);
+  const updateEmployerStore = useAppStore((s) => s.updateEmployer);
+  const router = useRouter();
+  
+  const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [showAllowanceInput, setShowAllowanceInput] = useState(
+    profile.livingStatus === "living_separately"
+  );
+
+  const steps = [
+    {
+      id: 1,
+      title: "基本情報",
+      description: "年齢・在学状況",
+      icon: UserIcon
+    },
+    {
+      id: 2,
+      title: "保険情報",
+      description: "加入状況・扶養",
+      icon: ShieldCheckIcon
+    },
+    {
+      id: 3,
+      title: "収入情報",
+      description: "勤務先・収入",
+      icon: CurrencyYenIcon
+    }
+  ];
+
+  // 同居状況の変更を監視
+  useEffect(() => {
+    setShowAllowanceInput(profile.livingStatus === "living_separately");
+  }, [profile.livingStatus]);
+
+  const handleNext = () => {
+    if (currentStep < 3) {
+      setCurrentStep((prev) => (prev + 1) as Step);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => (prev - 1) as Step);
+    }
+  };
+
+  const addNewEmployer = () => {
+    const newEmployer: Employer = {
+      id: Date.now().toString(),
+      name: "",
+      weeklyHours: 0,
+      monthlyIncome: 0,
+      commutingAllowance: 0,
+      bonus: 0,
+      employerSize: "unknown"
+    };
+    addEmployer(newEmployer);
+  };
+
+  const updateEmployer = (id: string, updates: Partial<Employer>) => {
+    updateEmployerStore(id, updates);
+  };
+
+  const removeEmployerById = (id: string) => {
+    removeEmployer(id);
+  };
+
+  const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
+  const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
+  const isStep3Complete = profile.employers.length > 0;
 
   return (
-    <div className="grid gap-6 max-w-xl">
-      <h1 className="text-xl font-semibold">初回診断</h1>
-      <label className="grid gap-1">
-        <span className="text-sm text-gray-600">学年</span>
-        <input
-          className="border rounded px-3 py-2"
-          value={profile.grade ?? ""}
-          onChange={(e) => setProfile({ grade: e.target.value })}
-          placeholder="例: 大学2年"
-        />
-      </label>
-      <label className="grid gap-1">
-        <span className="text-sm text-gray-600">親の扶養</span>
-        <select
-          className="border rounded px-3 py-2"
-          value={profile.isParentDependent === undefined ? "" : profile.isParentDependent ? "yes" : "no"}
-          onChange={(e) => setProfile({ isParentDependent: e.target.value === "yes" })}
+    <div className="max-w-4xl mx-auto">
+      {/* ヘッダー */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">初回設定</h1>
+        <p className="text-gray-600">2025年度の最新制度に基づいて、あなたの扶養状況を正確に判定します</p>
+      </div>
+
+      <ProgressBar current={currentStep} total={3} />
+      <StepIndicator steps={steps} currentStep={currentStep} />
+
+      {/* ステップ1: 基本情報 */}
+      {currentStep === 1 && (
+        <div className="alumnote-card p-8">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+            <UserIcon className="w-6 h-6 text-blue-600" />
+            基本情報
+          </h2>
+          
+          <div className="grid gap-6">
+            <HelpToggle
+              label="生年月日"
+              helpContent={helpContent.birthDate}
+              required
+            >
+              <input
+                type="date"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={profile.birthDate || ""}
+                onChange={(e) => setProfile({ birthDate: e.target.value })}
+                max={new Date().toISOString().split('T')[0]}
+              />
+              <p className="text-xs text-gray-500 mt-1">年齢に基づいて扶養控除の適用可否を判定します</p>
+            </HelpToggle>
+
+            <HelpToggle
+              label="在学区分"
+              helpContent={helpContent.studentType}
+              required
+            >
+              <div className="grid gap-3">
+                {studentTypeOptions.map((option) => (
+                  <label key={option.value} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="studentType"
+                      value={option.value}
+                      checked={profile.studentType === option.value}
+                      onChange={(e) => setProfile({ studentType: e.target.value as StudentType })}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-sm text-gray-500">{option.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </HelpToggle>
+
+            <HelpToggle
+              label="居住自治体"
+              helpContent={helpContent.residenceCity}
+              required
+            >
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="例: 東京都新宿区"
+                value={profile.residenceCity || ""}
+                onChange={(e) => setProfile({ residenceCity: e.target.value })}
+              />
+              <p className="text-xs text-gray-500 mt-1">住民税の非課税基準判定に使用します</p>
+            </HelpToggle>
+          </div>
+        </div>
+      )}
+
+      {/* ステップ2: 保険情報 */}
+      {currentStep === 2 && (
+        <div className="alumnote-card p-8">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+            <ShieldCheckIcon className="w-6 h-6 text-blue-600" />
+            保険情報
+          </h2>
+          
+          <div className="grid gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                現在の保険加入状況 <span className="text-red-500">*</span>
+              </label>
+              <div className="grid gap-3">
+                {insuranceOptions.map((option) => (
+                  <label key={option.value} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="insuranceStatus"
+                      value={option.value}
+                      checked={profile.insuranceStatus === option.value}
+                      onChange={(e) => setProfile({ insuranceStatus: e.target.value as InsuranceType })}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-sm text-gray-500">{option.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {profile.insuranceStatus === "parent_dependent" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  親の保険種別 <span className="text-red-500">*</span>
+                </label>
+                <div className="grid gap-3">
+                  {parentInsuranceOptions.map((option) => (
+                    <label key={option.value} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="parentInsuranceType"
+                        value={option.value}
+                        checked={profile.parentInsuranceType === option.value}
+                        onChange={(e) => setProfile({ parentInsuranceType: e.target.value as ParentInsuranceType })}
+                        className="mt-1"
+                      />
+                      <div>
+                        <div className="font-medium">{option.label}</div>
+                        <div className="text-sm text-gray-500">{option.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                親との同居状況 <span className="text-red-500">*</span>
+              </label>
+              <div className="grid gap-3">
+                {livingStatusOptions.map((option) => (
+                  <label key={option.value} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="livingStatus"
+                      value={option.value}
+                      checked={profile.livingStatus === option.value}
+                      onChange={(e) => setProfile({ livingStatus: e.target.value as LivingStatus })}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-sm text-gray-500">{option.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {showAllowanceInput && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  月額仕送り <span className="text-gray-500">（任意）</span>
+                </label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="例: 50000"
+                  value={profile.monthlyAllowance || ""}
+                  onChange={(e) => setProfile({ monthlyAllowance: Number(e.target.value) || undefined })}
+                  min={0}
+                  step={1}
+                />
+                <p className="text-xs text-gray-500 mt-1">扶養控除の判定に影響する場合があります</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ステップ3: 収入情報 */}
+      {currentStep === 3 && (
+        <div className="alumnote-card p-8">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+            <CurrencyYenIcon className="w-6 h-6 text-blue-600" />
+            収入情報
+          </h2>
+          
+          <div className="grid gap-6">
+            {/* 勤務先情報 */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <label className="text-sm font-medium text-gray-700">
+                  勤務先情報 <span className="text-red-500">*</span>
+                </label>
+                <button
+                  onClick={addNewEmployer}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  勤務先を追加
+                </button>
+              </div>
+              
+              {profile.employers.length === 0 ? (
+                <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                  <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">勤務先を追加してください</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {profile.employers.map((employer, index) => (
+                    <div key={employer.id} className="border rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium">勤務先 {index + 1}</h4>
+                        <button
+                          onClick={() => removeEmployerById(employer.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            勤務先名
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            placeholder="例: コンビニエンスストア"
+                            value={employer.name}
+                            onChange={(e) => updateEmployer(employer.id, { name: e.target.value })}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            勤務先規模
+                          </label>
+                          <select
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            value={employer.employerSize}
+                            onChange={(e) => updateEmployer(employer.id, { employerSize: e.target.value as EmployerSize })}
+                          >
+                            {employerSizeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            週労働時間
+                          </label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            placeholder="例: 20"
+                            value={employer.weeklyHours}
+                            onChange={(e) => updateEmployer(employer.id, { weeklyHours: Number(e.target.value) })}
+                            min={0}
+                            step={0.5}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            月収見込み
+                          </label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            placeholder="例: 80000"
+                            value={employer.monthlyIncome}
+                            onChange={(e) => updateEmployer(employer.id, { monthlyIncome: Number(e.target.value) })}
+                            min={0}
+                            step={1}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            通勤手当
+                          </label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            placeholder="例: 5000"
+                            value={employer.commutingAllowance}
+                            onChange={(e) => updateEmployer(employer.id, { commutingAllowance: Number(e.target.value) })}
+                            min={0}
+                            step={1}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            賞与見込み
+                          </label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            placeholder="例: 100000"
+                            value={employer.bonus}
+                            onChange={(e) => updateEmployer(employer.id, { bonus: Number(e.target.value) })}
+                            min={0}
+                            step={1}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* その他の所得 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                その他の所得 <span className="text-gray-500">（任意）</span>
+              </label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3"
+                placeholder="例: 奨学金、副業収入など"
+                value={profile.otherIncome || ""}
+                onChange={(e) => setProfile({ otherIncome: Number(e.target.value) || undefined })}
+              />
+              <p className="text-xs text-gray-500 mt-1">奨学金、副業収入、投資収入などを含みます</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ナビゲーションボタン */}
+      <div className="flex items-center justify-between mt-8">
+        <button
+          onClick={handlePrev}
+          disabled={currentStep === 1}
+          className="flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <option value="">選択してください</option>
-          <option value="yes">はい</option>
-          <option value="no">いいえ</option>
-        </select>
-      </label>
-      <label className="grid gap-1">
-        <span className="text-sm text-gray-600">勤務先規模</span>
-        <select
-          className="border rounded px-3 py-2"
-          value={profile.employerSize ?? "unknown"}
-          onChange={(e) => setProfile({ employerSize: e.target.value as EmployerSize })}
-        >
-          <option value="unknown">未選択</option>
-          <option value="small">小規模</option>
-          <option value="medium">中規模</option>
-          <option value="large">大規模</option>
-        </select>
-      </label>
-      <label className="grid gap-1">
-        <span className="text-sm text-gray-600">時給（円）</span>
-        <input
-          className="border rounded px-3 py-2"
-          type="number"
-          inputMode="numeric"
-          value={profile.defaultHourlyWage ?? ""}
-          onChange={(e) => setProfile({ defaultHourlyWage: Number(e.target.value || 0) || undefined })}
-          placeholder="例: 1200"
-        />
-      </label>
+          <ChevronLeftIcon className="w-4 h-4" />
+          前へ
+        </button>
+        
+        <div className="flex items-center gap-4">
+          {currentStep === 1 && isStep1Complete && (
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckIcon className="w-4 h-4" />
+              <span className="text-sm">完了</span>
+            </div>
+          )}
+          {currentStep === 2 && isStep2Complete && (
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckIcon className="w-4 h-4" />
+              <span className="text-sm">完了</span>
+            </div>
+          )}
+          {currentStep === 3 && isStep3Complete && (
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckIcon className="w-4 h-4" />
+              <span className="text-sm">完了</span>
+            </div>
+          )}
+        </div>
+        
+        {currentStep < 3 ? (
+          <button
+            onClick={handleNext}
+            disabled={
+              (currentStep === 1 && !isStep1Complete) ||
+              (currentStep === 2 && !isStep2Complete)
+            }
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            次へ
+            <ChevronRightIcon className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push('/')}
+            disabled={!isStep3Complete}
+            className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            完了
+            <CheckIcon className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
