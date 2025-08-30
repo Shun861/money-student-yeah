@@ -54,6 +54,9 @@ export const useAppStore = create<AppState>((set) => ({
 		employerSize: "unknown",
 		defaultHourlyWage: undefined,
         bracket: 103,
+        
+        // 利用規約同意
+        termsAccepted: false,
 	},
 	incomes: [],
 	shifts: [],

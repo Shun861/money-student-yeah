@@ -42,8 +42,16 @@ export default function RootLayout({
 					<main className="flex-1 mx-auto max-w-5xl w-full px-4 py-6">
 						{children}
 					</main>
-					<footer className="border-t text-xs text-gray-500 py-4 text-center">
-						© {new Date().getFullYear()} Money Student Yeah
+					<footer className="border-t text-xs text-gray-500 py-4">
+						<div className="max-w-5xl mx-auto px-4">
+							<div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+								<div>© {new Date().getFullYear()} Money Student Yeah</div>
+								<div className="flex items-center gap-4">
+									<Link href="/terms" className="hover:text-gray-700">利用規約</Link>
+									<Link href="/privacy" className="hover:text-gray-700">プライバシーポリシー</Link>
+								</div>
+							</div>
+						</div>
 					</footer>
 				</div>
 			</body>
