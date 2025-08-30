@@ -28,6 +28,7 @@ export function calculateWalls(
 
 // 勤務スケジュールから収入を計算
 export function calculateIncomeFromSchedule(
+	profile: UserProfile,
 	schedules: WorkSchedule[],
 	shifts: ShiftEntry[],
 	year: number = dayjs().year()
@@ -45,14 +46,16 @@ export function calculateIncomeFromSchedule(
 			
 			const effectiveStart = startDate.isAfter(yearStart) ? startDate : yearStart;
 			const effectiveEnd = endDate.isBefore(yearEnd) ? endDate : yearEnd;
-			
-			const weeksInYear = effectiveEnd.diff(effectiveStart, 'week') + 1;
+
+			// 有効期間の週数・月数を算出
+			const weeksInPeriod = effectiveEnd.diff(effectiveStart, 'week') + 1;
+			const monthsInPeriod = effectiveEnd.endOf('month').diff(effectiveStart.startOf('month'), 'month') + 1;
 			const monthlyIncome = schedule.weeklyHours * schedule.hourlyWage * 4.33; // 月平均4.33週
 			
 			if (schedule.frequency === 'weekly') {
-				totalIncome += schedule.weeklyHours * schedule.hourlyWage * weeksInYear;
+				totalIncome += schedule.weeklyHours * schedule.hourlyWage * Math.max(0, weeksInPeriod);
 			} else {
-				totalIncome += monthlyIncome * 12;
+				totalIncome += monthlyIncome * Math.max(0, monthsInPeriod);
 			}
 		}
 	});
@@ -60,7 +63,7 @@ export function calculateIncomeFromSchedule(
 	// シフトベースの収入計算
 	shifts.forEach(shift => {
 		if (dayjs(shift.date).year() === year) {
-			const hourlyWage = shift.hourlyWage || 0;
+			const hourlyWage = (shift.hourlyWage ?? profile.defaultHourlyWage) || 0;
 			totalIncome += shift.hours * hourlyWage;
 		}
 	});
@@ -90,7 +93,7 @@ export function predictDependencyExceed(
 	const currentMonth = dayjs().month() + 1;
 	
 	// 現在までの収入を計算
-	const currentIncome = calculateIncomeFromSchedule(schedules, shifts, currentYear);
+	const currentIncome = calculateIncomeFromSchedule(profile, schedules, shifts, currentYear);
 	const existingIncome = incomes
 		.filter(i => dayjs(i.date).year() === currentYear)
 		.reduce((sum, i) => sum + i.amount, 0);

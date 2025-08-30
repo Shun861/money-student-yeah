@@ -20,7 +20,7 @@ export default function PredictionPage() {
 
   // 現在の月収を計算
   const currentYear = new Date().getFullYear();
-  const currentIncome = calculateIncomeFromSchedule(workSchedules, shifts, currentYear);
+  const currentIncome = calculateIncomeFromSchedule(profile, workSchedules, shifts, currentYear);
   const existingIncome = incomes
     .filter(i => new Date(i.date).getFullYear() === currentYear)
     .reduce((sum, i) => sum + i.amount, 0);

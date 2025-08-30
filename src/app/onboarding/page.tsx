@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
 import { 
@@ -29,6 +30,8 @@ export default function OnboardingPage() {
   const setProfile = useAppStore((s) => s.setProfile);
   const addEmployer = useAppStore((s) => s.addEmployer);
   const removeEmployer = useAppStore((s) => s.removeEmployer);
+  const updateEmployerStore = useAppStore((s) => s.updateEmployer);
+  const router = useRouter();
   
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [showAllowanceInput, setShowAllowanceInput] = useState(
@@ -87,11 +90,7 @@ export default function OnboardingPage() {
   };
 
   const updateEmployer = (id: string, updates: Partial<Employer>) => {
-    setProfile({
-      employers: profile.employers.map(emp => 
-        emp.id === id ? { ...emp, ...updates } : emp
-      )
-    });
+    updateEmployerStore(id, updates);
   };
 
   const removeEmployerById = (id: string) => {
@@ -274,6 +273,8 @@ export default function OnboardingPage() {
                   placeholder="例: 50000"
                   value={profile.monthlyAllowance || ""}
                   onChange={(e) => setProfile({ monthlyAllowance: Number(e.target.value) || undefined })}
+                  min={0}
+                  step={1}
                 />
                 <p className="text-xs text-gray-500 mt-1">扶養控除の判定に影響する場合があります</p>
               </div>
@@ -366,6 +367,8 @@ export default function OnboardingPage() {
                             placeholder="例: 20"
                             value={employer.weeklyHours}
                             onChange={(e) => updateEmployer(employer.id, { weeklyHours: Number(e.target.value) })}
+                            min={0}
+                            step={0.5}
                           />
                         </div>
                         
@@ -379,6 +382,8 @@ export default function OnboardingPage() {
                             placeholder="例: 80000"
                             value={employer.monthlyIncome}
                             onChange={(e) => updateEmployer(employer.id, { monthlyIncome: Number(e.target.value) })}
+                            min={0}
+                            step={1}
                           />
                         </div>
                         
@@ -392,6 +397,8 @@ export default function OnboardingPage() {
                             placeholder="例: 5000"
                             value={employer.commutingAllowance}
                             onChange={(e) => updateEmployer(employer.id, { commutingAllowance: Number(e.target.value) })}
+                            min={0}
+                            step={1}
                           />
                         </div>
                         
@@ -405,6 +412,8 @@ export default function OnboardingPage() {
                             placeholder="例: 100000"
                             value={employer.bonus}
                             onChange={(e) => updateEmployer(employer.id, { bonus: Number(e.target.value) })}
+                            min={0}
+                            step={1}
                           />
                         </div>
                       </div>
@@ -478,7 +487,7 @@ export default function OnboardingPage() {
           </button>
         ) : (
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => router.push('/')}
             disabled={!isStep3Complete}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >

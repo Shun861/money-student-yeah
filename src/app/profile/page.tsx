@@ -249,17 +249,21 @@ export default function ProfilePage() {
           <div className="rounded-xl border bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold mb-4">月別収入推移</h3>
             <div className="grid grid-cols-12 gap-1 h-32 items-end">
-              {monthlyData.map((data, idx) => (
-                <div key={idx} className="flex flex-col items-center">
-                  <div 
-                    className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
-                    style={{ 
-                      height: `${Math.max(10, (data.total / Math.max(...monthlyData.map(d => d.total))) * 100)}%` 
-                    }}
-                  />
-                  <div className="text-xs text-gray-500 mt-1">{data.month}月</div>
-                </div>
-              ))}
+              {(() => {
+                const maxTotal = Math.max(1, ...monthlyData.map(d => d.total));
+                return monthlyData.map((data, idx) => {
+                  const pct = Math.max(0, (data.total / maxTotal) * 100);
+                  return (
+                    <div key={idx} className="flex flex-col items-center">
+                      <div 
+                        className="w-full bg-blue-500 rounded-t transition-all duration-300 hover:bg-blue-600"
+                        style={{ height: `${Math.max(4, pct)}%`, minHeight: 4 }}
+                      />
+                      <div className="text-xs text-gray-500 mt-1">{data.month}月</div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
             <div className="text-center text-sm text-gray-600 mt-4">
               各月の収入を視覚化しています
