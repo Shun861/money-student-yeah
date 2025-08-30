@@ -100,6 +100,31 @@ export default function OnboardingPage() {
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
   const isStep3Complete = profile.employers.length > 0;
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const completeOnboarding = async () => {
+    if (!isStep3Complete || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: { onboarding_completed: true } }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || `更新に失敗しました (${res.status})`);
+      }
+      router.push('/profile');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '更新に失敗しました';
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -473,6 +498,9 @@ export default function OnboardingPage() {
           )}
         </div>
         
+        {submitError && (
+          <p className="text-sm text-red-600 mr-auto">{submitError}</p>
+        )}
         {currentStep < 3 ? (
           <button
             onClick={handleNext}
@@ -487,11 +515,11 @@ export default function OnboardingPage() {
           </button>
         ) : (
           <button
-            onClick={() => router.push('/')}
-            disabled={!isStep3Complete}
+            onClick={completeOnboarding}
+            disabled={!isStep3Complete || submitting}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            完了
+            {submitting ? '保存中…' : '完了'}
             <CheckIcon className="w-4 h-4" />
           </button>
         )}
