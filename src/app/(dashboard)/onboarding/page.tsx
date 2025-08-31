@@ -109,16 +109,11 @@ export default function OnboardingPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile: { onboarding_completed: true } }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `更新に失敗しました (${res.status})`);
-      }
-      router.push('/profile');
+      // ローカルストレージに保存（Zustandストアは自動的に更新される）
+      localStorage.setItem('onboarding_completed', 'true');
+      
+      // 成功したらホームに遷移
+      router.push('/');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '更新に失敗しました';
       setSubmitError(msg);

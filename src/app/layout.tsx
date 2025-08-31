@@ -26,34 +26,7 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				<div className="min-h-screen flex flex-col">
-					<header className="border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
-						<nav className="mx-auto max-w-5xl px-4 py-3 flex items-center gap-4 text-sm">
-							<Link href="/" className="font-semibold">扶養調整</Link>
-							<div className="flex items-center gap-3 text-gray-600">
-								<Link href="/" className="hover:text-black">ホーム</Link>
-								<Link href="/schedule" className="hover:text-black">勤務管理</Link>
-								<Link href="/simulation" className="hover:text-black">シミュレーション</Link>
-								<Link href="/prediction" className="hover:text-black">収入予測</Link>
-								<Link href="/profile" className="hover:text-black">マイページ</Link>
-							</div>
-						</nav>
-					</header>
-					<main className="flex-1 mx-auto max-w-5xl w-full px-4 py-6">
-						{children}
-					</main>
-					<footer className="border-t text-xs text-gray-500 py-4">
-						<div className="max-w-5xl mx-auto px-4">
-							<div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-								<div>© {new Date().getFullYear()} Money Student Yeah</div>
-								<div className="flex items-center gap-4">
-									<Link href="/terms" className="hover:text-gray-700">利用規約</Link>
-									<Link href="/privacy" className="hover:text-gray-700">プライバシーポリシー</Link>
-								</div>
-							</div>
-						</div>
-					</footer>
-				</div>
+				{children}
 			</body>
 		</html>
 	);
