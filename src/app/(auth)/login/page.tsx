@@ -1,6 +1,8 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabaseClient'
+import { useAppStore } from '@/lib/store'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -10,8 +12,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const router = useRouter()
+  const profile = useAppStore((s) => s.profile)
 
   const canSubmit = email.trim().length > 3 && password.length >= 6 && !loading
+
+  // ログイン後の遷移処理
+  const handlePostLogin = () => {
+    // 初回ユーザー（基本情報が未設定）の場合はオンボーディングへ
+    if (!profile.birthDate) {
+      router.push('/onboarding')
+    } else {
+      // 既存ユーザーはホームへ
+      router.push('/')
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -25,11 +40,18 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         setMessage('ログインしました。ページが自動で遷移します。')
-        // ミドルウェアにより保護ページへ誘導される
+        // ログイン成功後の遷移
+        setTimeout(() => {
+          handlePostLogin()
+        }, 1000)
       } else {
-  const { error } = await supabase.auth.signUp({ email, password })
+        const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
         setMessage('サインアップが完了しました。メール確認が必要な場合は案内に従ってください。')
+        // 新規登録後はオンボーディングへ
+        setTimeout(() => {
+          router.push('/onboarding')
+        }, 2000)
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'エラーが発生しました'
