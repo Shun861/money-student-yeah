@@ -176,6 +176,7 @@ export default function ProfilePage() {
             設定
           </div>
         </button>
+
       </div>
 
       {activeTab === 'report' && (

@@ -49,6 +49,7 @@ export type IncomeEntry = {
   date: string; // YYYY-MM-DD
   employer?: string;
   amount: number; // 円（手取り/総支給はMVPでは総額入力）
+  hours?: number; // 勤務時間（時間）
 };
 
 export type ShiftEntry = {
