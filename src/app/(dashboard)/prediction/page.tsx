@@ -40,7 +40,7 @@ export default function PredictionPage() {
       </div>
 
       {/* 現在の収入状況 */}
-      <div className="alumnote-card p-6 mb-8">
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
         <div className="flex items-center gap-3 mb-4">
           <ChartBarIcon className="w-6 h-6 text-blue-600" />
           <h2 className="text-xl font-semibold">現在の収入状況</h2>
@@ -99,7 +99,7 @@ export default function PredictionPage() {
       </div>
 
       {/* 収入予測 */}
-      <div className="alumnote-card p-6 mb-8">
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
         <div className="flex items-center gap-3 mb-6">
           <ArrowTrendingUpIcon className="w-6 h-6 text-green-600" />
           <h2 className="text-xl font-semibold">収入予測シミュレーション</h2>
@@ -113,7 +113,7 @@ export default function PredictionPage() {
       </div>
 
       {/* キャリアアドバイス */}
-      <div className="alumnote-card p-6 mb-8">
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
         <div className="flex items-center gap-3 mb-6">
           <InformationCircleIcon className="w-6 h-6 text-blue-600" />
           <h2 className="text-xl font-semibold">キャリアアドバイス</h2>
@@ -167,7 +167,7 @@ export default function PredictionPage() {
       </div>
 
       {/* 注意事項 */}
-      <div className="alumnote-card p-6 bg-yellow-50 border-yellow-200">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
         <div className="flex items-start gap-3">
           <InformationCircleIcon className="w-5 h-5 text-yellow-600 mt-0.5" />
           <div>
