@@ -3,6 +3,18 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+// NOTE(Issue #24): robust cookie detection to avoid false unauth state.
+function hasSupabaseAuthCookie(req: NextRequest): boolean {
+	// Common cookie names used by supabase-js / ssr helpers
+	const direct = ['sb-access-token', 'sb:token', 'sb-refresh-token']
+	if (direct.some((name) => req.cookies.get(name)?.value)) return true
+
+	// Older helper / edge cases: 'supabase-auth-token' containing a JSON array (urlencoded)
+	const legacy = req.cookies.get('supabase-auth-token')?.value
+	if (legacy) return true
+	return false
+}
+
 const EXEMPT_PATHS = new Set(['/reset-password', '/auth/callback'])
 const LOGIN_PATH = '/login'
 const PUBLIC_FILE = /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|txt|xml|map|woff2?|ttf|eot)$/i
@@ -44,14 +56,16 @@ export async function middleware(req: NextRequest) {
 		return res
 	}
 
-	// Fast unauth check (no cookie)
-	const hasAccessToken = Boolean(
-		req.cookies.get('sb-access-token')?.value || req.cookies.get('sb:token')?.value
-	)
-	if (!hasAccessToken) {
-		if (pathname === LOGIN_PATH) return res
-		return NextResponse.redirect(new URL(LOGIN_PATH, req.url))
-	}
+		// Fast unauth check (expanded cookie pattern). If absent, still attempt server user fetch
+		const hasAccessToken = hasSupabaseAuthCookie(req)
+		// We only early-redirect when clearly no auth cookie AND not hitting login
+		// Otherwise we let Supabase verify (covers case where cookie name changes).
+		if (!hasAccessToken && pathname !== LOGIN_PATH) {
+			// Attempt a cheap fetch anyway; if fails, redirect.
+			if (!supabaseUrl || !supabaseAnonKey) {
+				return NextResponse.redirect(new URL(LOGIN_PATH, req.url))
+			}
+		}
 
 	// Env missing → skip deeper checks but allow (already considered authed)
 	if (!supabaseUrl || !supabaseAnonKey) return res
@@ -74,11 +88,14 @@ export async function middleware(req: NextRequest) {
 		data: { user },
 	} = await supabase.auth.getUser().catch(() => ({ data: { user: null } as any }))
 
-	if (!user) {
-		const redirect = NextResponse.redirect(new URL(LOGIN_PATH, req.url))
-		res.cookies.getAll().forEach((c) => redirect.cookies.set(c))
-		return redirect
-	}
+		if (!user) {
+			if (pathname !== LOGIN_PATH) {
+				const redirect = NextResponse.redirect(new URL(LOGIN_PATH, req.url))
+				res.cookies.getAll().forEach((c) => redirect.cookies.set(c))
+				return redirect
+			}
+			return res // already on login
+		}
 
 	let onboardingCompleted = false
 	try {
