@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Paths that should bypass auth checks
-const EXEMPT_PATHS = new Set(['/login', '/reset-password', '/auth/callback'])
+const EXEMPT_PATHS = new Set(['/reset-password', '/auth/callback'])
 const PUBLIC_FILE = /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|txt|xml|map|woff2?|ttf|eot)$/i
 
 export async function middleware(req: NextRequest) {
@@ -12,7 +12,6 @@ export async function middleware(req: NextRequest) {
   // Allow Next internals, public assets, API routes, and explicit exempt paths
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname === '/favicon.ico' ||
     PUBLIC_FILE.test(pathname) ||
     [...EXEMPT_PATHS].some((p) => pathname.startsWith(p))
@@ -25,7 +24,41 @@ export async function middleware(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // If envs are missing, skip auth (dev fallback)
+  // E2E mode: simulate auth and onboarding purely via cookies to avoid external deps
+  if (process.env.E2E_MODE === '1') {
+    const e2eAuth = req.cookies.get('e2e-auth')?.value === '1'
+    const e2eOnboarded = req.cookies.get('e2e-onboarded')?.value === '1'
+
+    if (!e2eAuth) {
+      // Allow access to login/reset/etc via EXEMPT_PATHS; otherwise redirect to /login
+      if (![...EXEMPT_PATHS].some((p) => pathname.startsWith(p))) {
+        return NextResponse.redirect(new URL('/login', req.url))
+      }
+      return res
+    }
+
+    if (e2eAuth && !e2eOnboarded && pathname !== '/onboarding') {
+      return NextResponse.redirect(new URL('/onboarding', req.url))
+    }
+
+    if (e2eAuth && e2eOnboarded && pathname === '/login') {
+      return NextResponse.redirect(new URL('/profile', req.url))
+    }
+
+    return res
+  }
+
+  // Fast-path: if no Supabase auth cookie, treat as unauthenticated
+  const hasAccessToken = Boolean(
+    req.cookies.get('sb-access-token')?.value || req.cookies.get('sb:token')?.value
+  )
+  if (!hasAccessToken) {
+    const url = new URL('/login', req.url)
+    const redirect = NextResponse.redirect(url)
+    return redirect
+  }
+
+  // If envs are missing, skip deeper checks (but we already redirected unauthenticated above)
   if (!supabaseUrl || !supabaseAnonKey) {
     return res
   }
@@ -96,6 +129,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Run on all paths except for static files we already skip in code; matcher keeps overhead low
-  matcher: ['/((?!_next).*)'],
+  // Exclude api and static assets; run on app pages
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
