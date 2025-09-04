@@ -28,6 +28,17 @@ export default function LoginPage() {
     }
   }
 
+  async function waitForSession(maxMs = 2500, interval = 200) {
+    const supabase = getSupabaseClient()
+    const started = Date.now()
+    while (Date.now() - started < maxMs) {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) return data.session
+      await new Promise(r => setTimeout(r, interval))
+    }
+    return null
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -39,11 +50,14 @@ export default function LoginPage() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        setMessage('ログインしました。ページが自動で遷移します。')
-        // ログイン成功後の遷移
-        setTimeout(() => {
-          handlePostLogin()
-        }, 1000)
+        setMessage('ログインしました。セッション確認中…')
+        // セッション確立を待機
+        const session = await waitForSession()
+        if (!session) {
+          setMessage('セッション確立が遅延しています。ページを再読み込みしてください。')
+          return
+        }
+        handlePostLogin()
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
