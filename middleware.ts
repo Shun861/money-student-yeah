@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-// Paths that should bypass auth checks
+// Paths that should bypass auth checks (excluding /login which we handle explicitly)
 const EXEMPT_PATHS = new Set(['/reset-password', '/auth/callback'])
+const LOGIN_PATH = '/login'
 const PUBLIC_FILE = /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|txt|xml|map|woff2?|ttf|eot)$/i
 
 export async function middleware(req: NextRequest) {
@@ -30,18 +31,17 @@ export async function middleware(req: NextRequest) {
     const e2eOnboarded = req.cookies.get('e2e-onboarded')?.value === '1'
 
     if (!e2eAuth) {
-      // Allow access to login/reset/etc via EXEMPT_PATHS; otherwise redirect to /login
-      if (![...EXEMPT_PATHS].some((p) => pathname.startsWith(p))) {
-        return NextResponse.redirect(new URL('/login', req.url))
+      if (pathname === LOGIN_PATH || [...EXEMPT_PATHS].some((p) => pathname.startsWith(p))) {
+        return res
       }
-      return res
+      return NextResponse.redirect(new URL(LOGIN_PATH, req.url))
     }
 
     if (e2eAuth && !e2eOnboarded && pathname !== '/onboarding') {
       return NextResponse.redirect(new URL('/onboarding', req.url))
     }
 
-    if (e2eAuth && e2eOnboarded && pathname === '/login') {
+    if (e2eAuth && e2eOnboarded && pathname === LOGIN_PATH) {
       return NextResponse.redirect(new URL('/profile', req.url))
     }
 
@@ -53,9 +53,9 @@ export async function middleware(req: NextRequest) {
     req.cookies.get('sb-access-token')?.value || req.cookies.get('sb:token')?.value
   )
   if (!hasAccessToken) {
-    const url = new URL('/login', req.url)
-    const redirect = NextResponse.redirect(url)
-    return redirect
+    if (pathname === LOGIN_PATH) return res
+    const url = new URL(LOGIN_PATH, req.url)
+    return NextResponse.redirect(url)
   }
 
   // If envs are missing, skip deeper checks (but we already redirected unauthenticated above)
@@ -118,7 +118,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // If completed and trying to access /login, send to /profile
-  if (onboardingCompleted && pathname === '/login') {
+  if (onboardingCompleted && pathname === LOGIN_PATH) {
     const url = new URL('/profile', req.url)
     const redirect = NextResponse.redirect(url)
     res.cookies.getAll().forEach((c) => redirect.cookies.set(c))
