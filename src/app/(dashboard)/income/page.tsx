@@ -14,11 +14,19 @@ import {
 import dayjs from "dayjs";
 
 export default function IncomePage() {
+  // すべての Hook は条件分岐より前に宣言
   const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
   const addIncome = useAppStore((s) => s.addIncome);
-  
-  // プロフィールが初期化されていない場合は初期設定にリダイレクト
+  const removeIncome = useAppStore((s) => s.removeIncome);
+
+  const [employer, setEmployer] = useState("");
+  const [date, setDate] = useState("");
+  const [amount, setAmount] = useState("");
+  const [hours, setHours] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // 初期プロフィール未設定時の早期レンダー (Hook は既に宣言済みなのでOK)
   if (!profile.birthDate) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -38,13 +46,6 @@ export default function IncomePage() {
       </div>
     );
   }
-  const removeIncome = useAppStore((s) => s.removeIncome);
-
-  const [employer, setEmployer] = useState("");
-  const [date, setDate] = useState("");
-  const [amount, setAmount] = useState("");
-  const [hours, setHours] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const onAdd = () => {
     if (!date || !amount) return;

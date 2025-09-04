@@ -14,11 +14,21 @@ import {
 import dayjs from "dayjs";
 
 export default function WorkPage() {
+  // すべての Hook を先頭で宣言
   const profile = useAppStore((s) => s.profile);
   const workSchedules = useAppStore((s) => s.workSchedules);
   const shifts = useAppStore((s) => s.shifts);
-  
-  // プロフィールが初期化されていない場合は初期設定にリダイレクト
+  const addWorkSchedule = useAppStore((s) => s.addWorkSchedule);
+  const updateWorkSchedule = useAppStore((s) => s.updateWorkSchedule);
+  const removeWorkSchedule = useAppStore((s) => s.removeWorkSchedule);
+  const addShift = useAppStore((s) => s.addShift);
+  const removeShift = useAppStore((s) => s.removeShift);
+  const updateShift = useAppStore((s) => s.updateShift);
+  const [activeTab, setActiveTab] = useState<'schedule' | 'shifts'>('schedule');
+  const [showAddSchedule, setShowAddSchedule] = useState(false);
+  const [showAddShift, setShowAddShift] = useState(false);
+
+  // 初期プロフィール未設定時の分岐 (Hook はすでに宣言済み)
   if (!profile.birthDate) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -38,16 +48,6 @@ export default function WorkPage() {
       </div>
     );
   }
-  const addWorkSchedule = useAppStore((s) => s.addWorkSchedule);
-  const updateWorkSchedule = useAppStore((s) => s.updateWorkSchedule);
-  const removeWorkSchedule = useAppStore((s) => s.removeWorkSchedule);
-  const addShift = useAppStore((s) => s.addShift);
-  const removeShift = useAppStore((s) => s.removeShift);
-  const updateShift = useAppStore((s) => s.updateShift);
-
-  const [activeTab, setActiveTab] = useState<'schedule' | 'shifts'>('schedule');
-  const [showAddSchedule, setShowAddSchedule] = useState(false);
-  const [showAddShift, setShowAddShift] = useState(false);
 
   const addNewSchedule = () => {
     const newSchedule: WorkSchedule = {
