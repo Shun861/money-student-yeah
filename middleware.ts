@@ -25,7 +25,7 @@ export async function middleware(req: NextRequest) {
 	const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 	// Simulation mode for E2E
-	if (process.env.E2E_MODE === '1') {
+		if (process.env.E2E_MODE === '1' && process.env.NODE_ENV !== 'production') {
 		const e2eAuth = req.cookies.get('e2e-auth')?.value === '1'
 		const e2eOnboarded = req.cookies.get('e2e-onboarded')?.value === '1'
 
