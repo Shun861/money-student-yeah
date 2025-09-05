@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAppStore } from '@/lib/store'
@@ -39,11 +39,8 @@ export default function LoginPage() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        setMessage('ログインしました。ページが自動で遷移します。')
-        // ログイン成功後の遷移
-        setTimeout(() => {
-          handlePostLogin()
-        }, 1000)
+  setMessage('ログインしました。リダイレクトします…')
+  handlePostLogin()
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error

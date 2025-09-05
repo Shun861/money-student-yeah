@@ -1,15 +1,15 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseEnv } from './env';
 
-let client: SupabaseClient | null = null;
+let browserClient: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient {
-	if (client) return client;
+	if (browserClient) return browserClient;
 	const { url, anon } = getSupabaseEnv();
 	if (!url || !anon) {
-		// Avoid crashing at build; only throw when actually used at runtime
 		throw new Error('Supabase env is missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
 	}
-	client = createClient(url, anon);
-	return client;
+				browserClient = createBrowserClient(url, anon) as unknown as SupabaseClient;
+	return browserClient;
 }
