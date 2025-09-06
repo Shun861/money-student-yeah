@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
 import { 
@@ -109,11 +110,31 @@ export default function OnboardingPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      // ローカルストレージに保存（Zustandストアは自動的に更新される）
+      // Supabaseクライアントを取得
+      const supabase = getSupabaseClient();
+      
+      // 現在のユーザーを取得
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('ユーザー認証に失敗しました');
+      }
+
+      // データベースにonboarding_completedを保存
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('id', user.id);
+      
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw new Error('プロフィール更新に失敗しました');
+      }
+
+      // ローカルストレージにも保存（既存の互換性のため）
       localStorage.setItem('onboarding_completed', 'true');
       
-      // 成功したらホームに遷移
-      router.push('/');
+      // 成功したら直接ダッシュボードに遷移
+      router.push('/dashboard');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '更新に失敗しました';
       setSubmitError(msg);
