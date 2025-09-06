@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
-  const profile = useAppStore((s) => s.profile)
 
   const canSubmit = email.trim().length > 3 && password.length >= 6 && !loading
 
