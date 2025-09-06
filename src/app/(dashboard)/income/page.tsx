@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useIsOnboardingCompleted } from "@/lib/profileUtils";
-import type { IncomeEntry } from "@/types";
 import { 
   PlusIcon, 
   CalendarIcon, 
@@ -16,7 +15,6 @@ import dayjs from "dayjs";
 
 export default function IncomePage() {
   // すべての Hook は条件分岐より前に宣言
-  const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
   const addIncome = useAppStore((s) => s.addIncome);
   const removeIncome = useAppStore((s) => s.removeIncome);

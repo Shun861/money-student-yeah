@@ -7,7 +7,6 @@ import {
   PlusIcon, 
   ClockIcon, 
   CurrencyYenIcon, 
-  BuildingOfficeIcon,
   CalendarIcon,
   TrashIcon,
   UserIcon

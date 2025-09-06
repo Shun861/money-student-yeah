@@ -5,8 +5,8 @@
 
 import React from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { useAppStore } from '@/lib/store'
 import { getSupabaseClient } from '@/lib/supabaseClient'
+import type { UserProfile } from '@/types'
 
 /**
  * Check if user has completed onboarding based on database record
@@ -108,7 +108,7 @@ export async function isCurrentUserOnboardingCompleted(): Promise<boolean> {
  * Only use this as fallback when database check is not available
  * @deprecated Use isOnboardingCompleted instead
  */
-export function isProfileCompletedLegacy(profile: any): boolean {
+export function isProfileCompletedLegacy(profile: UserProfile): boolean {
   return Boolean(profile.birthDate && profile.studentType && profile.residenceCity)
 }
 
