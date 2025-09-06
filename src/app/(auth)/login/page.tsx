@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabaseClient'
 import { useAppStore } from '@/lib/store'
+import { isCurrentUserOnboardingCompleted } from '@/lib/profileUtils'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -18,13 +19,22 @@ export default function LoginPage() {
   const canSubmit = email.trim().length > 3 && password.length >= 6 && !loading
 
   // ログイン後の遷移処理
-  const handlePostLogin = () => {
-    // 初回ユーザー（基本情報が未設定）の場合はオンボーディングへ
-    if (!profile.birthDate) {
+  const handlePostLogin = async () => {
+    try {
+      // データベースのonboarding_completed状態をチェック
+      const isCompleted = await isCurrentUserOnboardingCompleted()
+      
+      if (!isCompleted) {
+        // オンボーディング未完了の場合はオンボーディングへ
+        router.push('/onboarding')
+      } else {
+        // 既存ユーザーはダッシュボードへ
+        router.push('/dashboard')
+      }
+    } catch (error) {
+      console.error('Failed to check onboarding status:', error)
+      // エラー時はオンボーディングへ（安全な方向へ）
       router.push('/onboarding')
-    } else {
-      // 既存ユーザーはホームへ
-      router.push('/')
     }
   }
 
@@ -40,7 +50,7 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
   setMessage('ログインしました。リダイレクトします…')
-  handlePostLogin()
+  await handlePostLogin()
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error

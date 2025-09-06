@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
+import { useIsOnboardingCompleted } from "@/lib/profileUtils";
 import type { WorkSchedule, ShiftEntry } from "@/types";
 import { 
   PlusIcon, 
@@ -24,12 +25,23 @@ export default function WorkPage() {
   const addShift = useAppStore((s) => s.addShift);
   const removeShift = useAppStore((s) => s.removeShift);
   const updateShift = useAppStore((s) => s.updateShift);
+  const { isCompleted, isLoading } = useIsOnboardingCompleted();
+  
   const [activeTab, setActiveTab] = useState<'schedule' | 'shifts'>('schedule');
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [showAddShift, setShowAddShift] = useState(false);
 
+  // オンボーディング状態をロード中
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
+
   // 初期プロフィール未設定時の分岐 (Hook はすでに宣言済み)
-  if (!profile.birthDate) {
+  if (!isCompleted) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
