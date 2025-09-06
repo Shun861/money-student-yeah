@@ -6,7 +6,7 @@ export async function GET() {
   return NextResponse.json({ profile: null });
 }
 
-export async function PUT(req: Request) {
+export async function PUT() {
   // ローカルストレージのデータを更新（クライアントサイドで処理）
   return NextResponse.json({ success: true });
 }

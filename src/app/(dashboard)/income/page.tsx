@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import type { IncomeEntry } from "@/types";
+import { useIsOnboardingCompleted } from "@/lib/profileUtils";
 import { 
   PlusIcon, 
   CalendarIcon, 
@@ -15,10 +15,10 @@ import dayjs from "dayjs";
 
 export default function IncomePage() {
   // すべての Hook は条件分岐より前に宣言
-  const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
   const addIncome = useAppStore((s) => s.addIncome);
   const removeIncome = useAppStore((s) => s.removeIncome);
+  const { isCompleted, isLoading } = useIsOnboardingCompleted();
 
   const [employer, setEmployer] = useState("");
   const [date, setDate] = useState("");
@@ -26,8 +26,17 @@ export default function IncomePage() {
   const [hours, setHours] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // オンボーディング状態をロード中
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
+
   // 初期プロフィール未設定時の早期レンダー (Hook は既に宣言済みなのでOK)
-  if (!profile.birthDate) {
+  if (!isCompleted) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
