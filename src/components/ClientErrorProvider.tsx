@@ -1,16 +1,28 @@
 "use client";
-import { useEffect } from "react";
-import { setupGlobalErrorHandlers } from "@/lib/errorHandling";
+import { useEffect } from 'react';
+import { initializeErrorHandling, addBreadcrumb } from '@/lib/errorHandling';
+import { usePathname } from 'next/navigation';
 
 /**
- * クライアントサイドエラー処理の初期化
- * グローバルエラーハンドラーを設定
+ * クライアントサイドエラーハンドリングの初期化
  */
 export function ClientErrorProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   useEffect(() => {
-    // グローバルエラーハンドラーの設定
-    setupGlobalErrorHandlers();
+    // エラーハンドリング機能を初期化
+    initializeErrorHandling();
   }, []);
+
+  // ルート変更時のパンくずリスト追加
+  useEffect(() => {
+    addBreadcrumb({
+      category: 'navigation',
+      message: `Navigated to: ${pathname}`,
+      level: 'info',
+      data: { pathname }
+    });
+  }, [pathname]);
 
   return <>{children}</>;
 }

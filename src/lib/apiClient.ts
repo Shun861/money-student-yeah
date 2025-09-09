@@ -3,7 +3,7 @@
  */
 
 import { ApiErrorResponse } from '@/types/api';
-import { AppError, ErrorType, fromApiError, fromError } from './errorHandling';
+import { AppError, ErrorType, fromApiError, fromError, addBreadcrumb } from './errorHandling';
 
 // ========================================
 // API 設定
@@ -23,6 +23,19 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const startTime = performance.now();
+  
+  // API呼び出し開始をパンくずリストに追加
+  addBreadcrumb({
+    category: 'api_call',
+    message: `API Request: ${options.method || 'GET'} ${endpoint}`,
+    level: 'info',
+    data: { 
+      endpoint, 
+      method: options.method || 'GET',
+      url 
+    }
+  });
   
   try {
     // デフォルトヘッダーを設定
@@ -36,8 +49,34 @@ export async function apiRequest<T>(
       headers: defaultHeaders,
     });
 
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+
     // レスポンスJSONを解析
     const data = await response.json();
+
+    // API呼び出し完了をパンくずリストに追加
+    addBreadcrumb({
+      category: 'api_call',
+      message: `API Response: ${response.status} ${endpoint}`,
+      level: response.ok ? 'info' : 'error',
+      data: { 
+        endpoint,
+        status: response.status,
+        duration: Math.round(duration),
+        success: response.ok
+      }
+    });
+
+    // 遅いAPIコールの警告
+    if (duration > 3000) { // 3秒以上
+      addBreadcrumb({
+        category: 'info',
+        message: `Slow API call detected: ${endpoint} took ${Math.round(duration)}ms`,
+        level: 'warning',
+        data: { endpoint, duration }
+      });
+    }
 
     // エラーレスポンスの処理
     if (!response.ok) {
@@ -54,6 +93,21 @@ export async function apiRequest<T>(
     return data;
 
   } catch (error) {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+
+    // エラーをパンくずリストに追加
+    addBreadcrumb({
+      category: 'api_call',
+      message: `API Error: ${endpoint}`,
+      level: 'error',
+      data: { 
+        endpoint,
+        duration: Math.round(duration),
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
+
     // ネットワークエラーや解析エラーの処理
     if (error instanceof Error && error.name === 'TypeError') {
       // fetchのネットワークエラー

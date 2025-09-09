@@ -168,14 +168,52 @@ export default function ProfileTestPage() {
           {/* 実装情報 */}
           <div className="mt-8 bg-blue-50 rounded-lg p-4">
             <h3 className="text-md font-medium text-blue-900 mb-2">実装された機能</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>✅ 統一APIクライアント (apiClient.ts)</li>
-              <li>✅ グローバルToastProvider</li>
-              <li>✅ カスタムエラーハンドリングフック (useApiErrorHandler)</li>
-              <li>✅ エラータイプ別メッセージ表示</li>
-              <li>✅ 認証エラー時の自動リダイレクト</li>
-              <li>✅ 非同期処理の安全実行 (safeExecute)</li>
-            </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+              <div>
+                <h4 className="font-medium mb-1">Phase 1 & 2:</h4>
+                <ul className="space-y-1">
+                  <li>✅ 統一APIクライアント (apiClient.ts)</li>
+                  <li>✅ グローバルToastProvider</li>
+                  <li>✅ カスタムエラーハンドリングフック</li>
+                  <li>✅ エラータイプ別メッセージ表示</li>
+                  <li>✅ 認証エラー時の自動リダイレクト</li>
+                  <li>✅ 非同期処理の安全実行</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Phase 3 (新機能):</h4>
+                <ul className="space-y-1">
+                  <li>✅ 強化されたエラーログシステム</li>
+                  <li>✅ パフォーマンス監視 (LCP, CLS, Long Task)</li>
+                  <li>✅ パンくずリスト機能</li>
+                  <li>✅ デバイス・ネットワーク情報収集</li>
+                  <li>✅ エラー報告API (/api/error-report)</li>
+                  <li>✅ セッション追跡とアナリティクス</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* パフォーマンス監視情報 */}
+          <div className="mt-6 bg-yellow-50 rounded-lg p-4">
+            <h3 className="text-md font-medium text-yellow-900 mb-2">パフォーマンス監視</h3>
+            <p className="text-sm text-yellow-800 mb-2">
+              以下の指標が自動監視され、閾値を超えた場合にパンくずリストに記録されます：
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-yellow-900">LCP:</span>
+                <span className="text-yellow-800 ml-1">2.5秒以上で警告</span>
+              </div>
+              <div>
+                <span className="font-medium text-yellow-900">CLS:</span>
+                <span className="text-yellow-800 ml-1">0.1以上で警告</span>
+              </div>
+              <div>
+                <span className="font-medium text-yellow-900">Long Task:</span>
+                <span className="text-yellow-800 ml-1">50ms以上で警告</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

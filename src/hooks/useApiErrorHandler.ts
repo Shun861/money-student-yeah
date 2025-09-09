@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { useToastContext } from '@/components/ToastProvider';
 import { useRouter } from 'next/navigation';
-import { AppError, ErrorType, fromUnknown, safeAsync } from '@/lib/errorHandling';
+import { AppError, ErrorType, fromUnknown, safeAsync, addBreadcrumb } from '@/lib/errorHandling';
 
 /**
  * APIエラーハンドリング用カスタムフック
@@ -21,11 +21,28 @@ export function useApiErrorHandler() {
   const handleError = useCallback((error: unknown, context?: string) => {
     const appError = fromUnknown(error, context);
     
+    // エラー処理をパンくずリストに追加
+    addBreadcrumb({
+      category: 'error',
+      message: `Error handled: ${appError.type}`,
+      level: 'error',
+      data: { 
+        type: appError.type,
+        message: appError.message,
+        context 
+      }
+    });
+    
     // トーストでエラー表示
     showErrorFromAppError(appError);
     
     // 認証エラーの場合は自動的にログインページにリダイレクト
     if (appError.type === ErrorType.AUTH) {
+      addBreadcrumb({
+        category: 'navigation',
+        message: 'Redirecting to login due to auth error',
+        level: 'info'
+      });
       router.push('/auth/login');
     }
     
@@ -44,6 +61,14 @@ export function useApiErrorHandler() {
       suppressToast?: boolean;
     }
   ): Promise<T | null> => {
+    // 実行開始をパンくずリストに追加
+    addBreadcrumb({
+      category: 'user_action',
+      message: `Safe async execution started: ${options?.context || 'unknown'}`,
+      level: 'info',
+      data: { context: options?.context }
+    });
+
     const [result, error] = await safeAsync(asyncFn, options?.context);
     
     if (error) {
@@ -53,6 +78,11 @@ export function useApiErrorHandler() {
       
       // 認証エラーの場合は自動リダイレクト
       if (error.type === ErrorType.AUTH) {
+        addBreadcrumb({
+          category: 'navigation',
+          message: 'Redirecting to login due to auth error',
+          level: 'info'
+        });
         router.push('/auth/login');
       }
       
@@ -61,6 +91,14 @@ export function useApiErrorHandler() {
     }
     
     if (result) {
+      // 成功をパンくずリストに追加
+      addBreadcrumb({
+        category: 'user_action',
+        message: `Safe async execution completed: ${options?.context || 'unknown'}`,
+        level: 'info',
+        data: { context: options?.context }
+      });
+      
       options?.onSuccess?.(result);
     }
     
