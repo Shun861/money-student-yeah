@@ -423,7 +423,7 @@ export function addBreadcrumb(breadcrumb: Omit<Breadcrumb, 'timestamp'>) {
  * IDを生成
  */
 function generateId(): string {
-  return Math.random().toString(36).substr(2, 9) + Date.now().toString(36)
+  return Math.random().toString(36).slice(2, 11) + Date.now().toString(36)
 }
 
 /**
@@ -476,9 +476,9 @@ async function sendErrorReport(appError: AppError, analytics: ErrorAnalytics): P
   }
 
   try {
-    const endpoint = process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT
+    let endpoint = process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT
     if (!endpoint) {
-      return
+      endpoint = '/api/error-report'
     }
 
     await fetch(endpoint, {

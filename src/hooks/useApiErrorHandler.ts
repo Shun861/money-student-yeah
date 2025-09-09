@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { useToastContext } from '@/components/ToastProvider';
 import { useRouter } from 'next/navigation';
 import { AppError, ErrorType, fromUnknown, safeAsync, addBreadcrumb } from '@/lib/errorHandling';
+import { ROUTES } from '@/constants/routes';
 
 /**
  * APIエラーハンドリング用カスタムフック
@@ -43,7 +44,7 @@ export function useApiErrorHandler() {
         message: 'Redirecting to login due to auth error',
         level: 'info'
       });
-      router.push('/auth/login');
+      router.push(ROUTES.LOGIN);
     }
     
     return appError;

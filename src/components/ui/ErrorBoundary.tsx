@@ -1,6 +1,13 @@
 "use client";
-import { Component, ReactNode } from "react";
-import { AppError, fromError, logError, getUserFriendlyMessage, ErrorType } from "@/lib/errorHandling";
+import React, { Component, ReactNode } from 'react';
+import { 
+  ErrorType, 
+  AppError, 
+  fromError, 
+  getUserFriendlyMessage, 
+  logError 
+} from '@/lib/errorHandling';
+import { ROUTES } from '@/constants/routes';
 
 interface Props {
   children: ReactNode;
@@ -135,7 +142,7 @@ ${errorInfo.componentStack}`
             {/* 認証エラーの場合は特別なアクション */}
             {isAuthError && (
               <button
-                onClick={() => window.location.href = '/login'}
+                onClick={() => window.location.href = ROUTES.LOGIN}
                 className="w-full mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 ログインページへ
