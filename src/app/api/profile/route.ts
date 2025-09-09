@@ -150,7 +150,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ProfileUpd
     }
 
     // データベース形式に変換
-    const dbUpdateData: Record<string, any> = {}
+    const dbUpdateData: Record<string, string | number | boolean | null> = {}
     
     if (updateData.birthDate !== undefined) dbUpdateData.birth_date = updateData.birthDate
     if (updateData.studentType !== undefined) dbUpdateData.student_type = updateData.studentType
