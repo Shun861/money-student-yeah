@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabaseClient'
-import { useAppStore } from '@/lib/store'
 import { isCurrentUserOnboardingCompleted } from '@/lib/profileUtils'
 import Link from 'next/link'
 

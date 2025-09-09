@@ -84,7 +84,7 @@ export interface ApiErrorResponse {
   error: {
     code: string
     message: string
-    details?: any
+    details?: string | Record<string, unknown>
   }
 }
 
