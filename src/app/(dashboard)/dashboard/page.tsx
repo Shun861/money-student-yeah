@@ -1,5 +1,6 @@
-"use client";
+"use client"
 import { useAppStore } from "@/lib/store";
+import { useIsOnboardingCompleted } from "@/lib/profileUtils";
 import { calculateWalls } from "@/lib/rules";
 import { 
   CurrencyYenIcon, 
@@ -14,9 +15,19 @@ import { Card } from "@/components/ui/Card";
 export default function DashboardPage() {
   const profile = useAppStore((s) => s.profile);
   const incomes = useAppStore((s) => s.incomes);
+  const { isCompleted, isLoading } = useIsOnboardingCompleted();
   
-  // プロフィールが初期化されていない場合は初期データを表示
-  if (!profile.birthDate) {
+  // オンボーディング状態をロード中
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
+  
+  // オンボーディングが未完了の場合は初期データを表示
+  if (!isCompleted) {
     // 初期状態のダッシュボードを表示
     return (
       <div>

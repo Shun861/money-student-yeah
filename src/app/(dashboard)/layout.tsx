@@ -1,20 +1,15 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   HomeIcon, 
   ClockIcon, 
-  CalculatorIcon, 
-  ArrowTrendingUpIcon, 
-  PlusIcon, 
-  ChartBarIcon,
   UserIcon,
   Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon,
-  CurrencyYenIcon,
-  CalendarIcon
+  CurrencyYenIcon
 } from "@heroicons/react/24/outline";
 
 // 学生目線でのシンプルなナビゲーション
@@ -32,15 +27,6 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // 初期化時のローディング状態
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
