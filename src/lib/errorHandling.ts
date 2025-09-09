@@ -103,6 +103,11 @@ export function fromError(error: Error, context?: string): AppError {
  * 不明なエラーをAppErrorに変換
  */
 export function fromUnknown(error: unknown, context?: string): AppError {
+  if (error && typeof error === 'object' && 'type' in error && 'message' in error) {
+    // 既にAppError形式
+    return error as AppError
+  }
+  
   if (error instanceof Error) {
     return fromError(error, context)
   }
@@ -112,7 +117,24 @@ export function fromUnknown(error: unknown, context?: string): AppError {
     message: typeof error === 'string' ? error : 'Unknown error occurred',
     details: JSON.stringify(error),
     timestamp: new Date().toISOString(),
-    url: context
+    userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+    url: typeof window !== 'undefined' ? window.location.href : context
+  }
+}
+
+/**
+ * 非同期処理をsafe wrapする関数
+ */
+export async function safeAsync<T>(
+  asyncFn: () => Promise<T>,
+  context?: string
+): Promise<[T | null, AppError | null]> {
+  try {
+    const result = await asyncFn()
+    return [result, null]
+  } catch (error) {
+    const appError = fromUnknown(error, context)
+    return [null, appError]
   }
 }
 

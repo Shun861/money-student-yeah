@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ClientErrorProvider } from "@/components/ClientErrorProvider";
+import { ToastProvider } from "@/components/ToastProvider";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -28,9 +29,11 @@ export default function RootLayout({
 		<html lang="ja">
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				<ErrorBoundary context="RootLayout">
-					<ClientErrorProvider>
-						{children}
-					</ClientErrorProvider>
+					<ToastProvider>
+						<ClientErrorProvider>
+							{children}
+						</ClientErrorProvider>
+					</ToastProvider>
 				</ErrorBoundary>
 			</body>
 		</html>
