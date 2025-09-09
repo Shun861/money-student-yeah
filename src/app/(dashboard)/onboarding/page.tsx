@@ -1,11 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/lib/store";
+import { useHydratedStore } from "@/hooks/useHydration";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { markOnboardingCompleted } from "@/lib/profileUtils";
 import Link from "next/link";
 import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
+
+// フォームバリデーション用の型
+interface FormErrors {
+  [key: string]: string;
+}
 import { 
   UserIcon, 
   ShieldCheckIcon, 
@@ -29,17 +34,37 @@ import {
 import { helpContent } from "@/constants/helpContent";
 
 export default function OnboardingPage() {
-  const profile = useAppStore((s) => s.profile);
-  const setProfile = useAppStore((s) => s.setProfile);
-  const addEmployer = useAppStore((s) => s.addEmployer);
-  const removeEmployer = useAppStore((s) => s.removeEmployer);
-  const updateEmployerStore = useAppStore((s) => s.updateEmployer);
+  const { hydrated, store } = useHydratedStore();
+  const profile = store.profile;
+  const setProfile = store.setProfile;
+  const addEmployer = store.addEmployer;
+  const removeEmployer = store.removeEmployer;
+  const updateEmployerStore = store.updateEmployer;
   const router = useRouter();
   
+  // すべてのstate hookを先頭で宣言
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [showAllowanceInput, setShowAllowanceInput] = useState(
     profile.livingStatus === "living_separately"
   );
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // 同居状況の変更を監視
+  useEffect(() => {
+    setShowAllowanceInput(profile.livingStatus === "living_separately");
+  }, [profile.livingStatus]);
+
+  // ハイドレーション待機中のローディング表示
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
 
   const steps = [
     {
@@ -61,11 +86,6 @@ export default function OnboardingPage() {
       icon: CurrencyYenIcon
     }
   ];
-
-  // 同居状況の変更を監視
-  useEffect(() => {
-    setShowAllowanceInput(profile.livingStatus === "living_separately");
-  }, [profile.livingStatus]);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -103,8 +123,6 @@ export default function OnboardingPage() {
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
   const isStep3Complete = profile.employers.length > 0 && profile.termsAccepted;
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const completeOnboarding = async () => {
     if (!isStep3Complete || submitting) return;

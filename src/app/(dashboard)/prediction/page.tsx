@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useAppStore } from "@/lib/store";
+import { useHydratedStore } from "@/hooks/useHydration";
 import { calculateIncomeFromSchedule } from "@/lib/rules";
 import { IncomePrediction } from "@/components/ui/IncomePrediction";
 import { 
@@ -10,13 +10,23 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function PredictionPage() {
-  const profile = useAppStore((s) => s.profile);
-  const incomes = useAppStore((s) => s.incomes);
-  const workSchedules = useAppStore((s) => s.workSchedules);
-  const shifts = useAppStore((s) => s.shifts);
+  const { hydrated, store } = useHydratedStore();
+  const profile = store.profile;
+  const incomes = store.incomes;
+  const workSchedules = store.workSchedules;
+  const shifts = store.shifts;
 
   const [useCustomIncome, setUseCustomIncome] = useState(false);
   const [customMonthlyIncome, setCustomMonthlyIncome] = useState<number>(0);
+
+  // ハイドレーション待機中のローディング表示
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
 
   // 現在の月収を計算
   const currentYear = new Date().getFullYear();

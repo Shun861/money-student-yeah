@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useAppStore } from "@/lib/store";
+import { useHydratedStore } from "@/hooks/useHydration";
 import { useIsOnboardingCompleted } from "@/lib/profileUtils";
 import type { WorkSchedule, ShiftEntry } from "@/types";
 import { 
@@ -15,23 +15,24 @@ import dayjs from "dayjs";
 
 export default function WorkPage() {
   // すべての Hook を先頭で宣言
-  const profile = useAppStore((s) => s.profile);
-  const workSchedules = useAppStore((s) => s.workSchedules);
-  const shifts = useAppStore((s) => s.shifts);
-  const addWorkSchedule = useAppStore((s) => s.addWorkSchedule);
-  const updateWorkSchedule = useAppStore((s) => s.updateWorkSchedule);
-  const removeWorkSchedule = useAppStore((s) => s.removeWorkSchedule);
-  const addShift = useAppStore((s) => s.addShift);
-  const removeShift = useAppStore((s) => s.removeShift);
-  const updateShift = useAppStore((s) => s.updateShift);
+  const { hydrated, store } = useHydratedStore();
+  const profile = store.profile;
+  const workSchedules = store.workSchedules;
+  const shifts = store.shifts;
+  const addWorkSchedule = store.addWorkSchedule;
+  const updateWorkSchedule = store.updateWorkSchedule;
+  const removeWorkSchedule = store.removeWorkSchedule;
+  const addShift = store.addShift;
+  const removeShift = store.removeShift;
+  const updateShift = store.updateShift;
   const { isCompleted, isLoading } = useIsOnboardingCompleted();
   
   const [activeTab, setActiveTab] = useState<'schedule' | 'shifts'>('schedule');
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [showAddShift, setShowAddShift] = useState(false);
 
-  // オンボーディング状態をロード中
-  if (isLoading) {
+  // ハイドレーション待機中またはオンボーディング状態をロード中
+  if (!hydrated || isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="text-gray-500">読み込み中...</div>
