@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { 
   HomeIcon, 
   ClockIcon, 
@@ -128,7 +129,9 @@ export default function DashboardLayout({
 
         <main className="min-h-screen bg-gray-100 p-4 lg:p-6">
           <div className="max-w-7xl mx-auto">
-            {children}
+            <ErrorBoundary context="DashboardLayout">
+              {children}
+            </ErrorBoundary>
           </div>
         </main>
       </div>
