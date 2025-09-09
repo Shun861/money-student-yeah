@@ -147,7 +147,7 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
 /**
  * POST リクエスト
  */
-export async function apiPost<T>(endpoint: string, data?: any): Promise<T> {
+export async function apiPost<T>(endpoint: string, data?: unknown): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     body: data ? JSON.stringify(data) : undefined,
@@ -157,7 +157,7 @@ export async function apiPost<T>(endpoint: string, data?: any): Promise<T> {
 /**
  * PUT リクエスト
  */
-export async function apiPut<T>(endpoint: string, data?: any): Promise<T> {
+export async function apiPut<T>(endpoint: string, data?: unknown): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
     body: data ? JSON.stringify(data) : undefined,

@@ -21,20 +21,25 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    const appError = fromError(error, 'ErrorBoundary');
-    return { hasError: true, appError };
+    const appError = fromError(error)
+    logError(appError)
+    return {
+      hasError: true,
+      appError
+    }
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
-    const appError = fromError(error, this.props.context || 'ErrorBoundary');
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    const appError = fromError(error)
     
-    // エラーログ出力
-    logError(appError);
-    
-    // カスタムエラーハンドラー実行
-    if (this.props.onError) {
-      this.props.onError(appError);
-    }
+    // エラー詳細をログに記録
+    logError({
+      ...appError,
+      details: `${appError.details}
+
+Component Stack:
+${errorInfo.componentStack}`
+    })
   }
 
   private handleReload = () => {

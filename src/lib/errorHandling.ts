@@ -284,7 +284,7 @@ export interface Breadcrumb {
   category: 'navigation' | 'user_action' | 'api_call' | 'error' | 'info'
   message: string
   level: 'debug' | 'info' | 'warning' | 'error'
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
 /**
@@ -337,7 +337,7 @@ function collectNetworkInfo(): NetworkInfo {
     return { online: true }
   }
 
-  const connection = (navigator as any).connection
+  const connection = (navigator as unknown as { connection?: { type?: string; effectiveType?: string; downlink?: number; rtt?: number } }).connection
   
   return {
     connectionType: connection?.type,
@@ -374,7 +374,7 @@ function collectPerformanceMetrics(): PerformanceMetrics {
 
   // メモリ使用量（Chrome限定）
   if ('memory' in performance) {
-    const memory = (performance as any).memory
+    const memory = (performance as unknown as { memory: { usedJSHeapSize: number } }).memory
     metrics.memoryUsage = memory.usedJSHeapSize
   }
 
@@ -537,8 +537,8 @@ export class PerformanceMonitor {
     this.observeEntry('layout-shift', (entries) => {
       let cls = 0
       entries.forEach(entry => {
-        if (!(entry as any).hadRecentInput) {
-          cls += (entry as any).value
+        if (!((entry as unknown as { hadRecentInput?: boolean }).hadRecentInput)) {
+          cls += (entry as unknown as { value: number }).value
         }
       })
       

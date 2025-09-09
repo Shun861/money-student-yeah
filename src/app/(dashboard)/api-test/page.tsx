@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useProfileApiErrorHandler } from '@/hooks/useApiErrorHandler';
 import { useToastContext } from '@/components/ToastProvider';
 import { getProfile, updateProfile } from '@/lib/apiClient';
@@ -18,10 +18,10 @@ export default function ProfileTestPage() {
   const { showSuccess } = useToastContext();
 
   // プロフィール取得
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoading(true);
     
-    const result = await safeProfileExecute(
+    await safeProfileExecute(
       () => getProfile(),
       {
         onSuccess: (response) => {
@@ -39,10 +39,10 @@ export default function ProfileTestPage() {
     );
     
     setLoading(false);
-  };
+  }, [safeProfileExecute, showSuccess]);
 
   // プロフィール更新テスト
-  const testUpdateProfile = async () => {
+  const testUpdateProfile = useCallback(async () => {
     if (!profile) return;
     
     setUpdating(true);
@@ -52,7 +52,7 @@ export default function ProfileTestPage() {
       studentType: profile.studentType || 'daytime',
     };
 
-    const result = await safeProfileExecute(
+    await safeProfileExecute(
       () => updateProfile(updateData),
       {
         onSuccess: (response) => {
@@ -66,12 +66,12 @@ export default function ProfileTestPage() {
     );
     
     setUpdating(false);
-  };
+  }, [profile, safeProfileExecute, showSuccess]);
 
   // 初期読み込み
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
