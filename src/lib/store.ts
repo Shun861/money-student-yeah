@@ -34,6 +34,10 @@ interface DbWorkScheduleResponse {
 const WEEKS_PER_MONTH = 4.33;
 const DEFAULT_HOURLY_WAGE = 1000;
 const DEFAULT_DAY_OF_WEEK = 1; // 月曜日
+const WORKING_DAYS_PER_WEEK = 5; // 平日勤務想定
+
+// ヘルパー関数
+const generateTempId = () => crypto.randomUUID();
 
 // マッピング関数
 const mapIncomeFromDb = (income: DbIncomeResponse): IncomeEntry => ({
@@ -280,7 +284,6 @@ const apiClient = {
 
   async createWorkSchedule(schedule: Omit<WorkSchedule, 'id'>): Promise<WorkSchedule> {
     // 週間時間を5日間の勤務日で分割（平日想定）
-    const WORKING_DAYS_PER_WEEK = 5;
     const dailyHours = Math.round(schedule.weeklyHours / WORKING_DAYS_PER_WEEK);
     
     const response = await fetch('/api/work-schedules', {
@@ -427,7 +430,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addEmployer: async (employer) => {
     try {
       // 楽観的更新
-      const tempId = crypto.randomUUID();
+      const tempId = generateTempId();
       const tempEmployer = { ...employer, id: tempId };
       set(state => ({ employers: [...state.employers, tempEmployer] }));
       
@@ -488,7 +491,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addIncome: async (income) => {
     try {
-      const tempId = crypto.randomUUID();
+      const tempId = generateTempId();
       const tempIncome = { ...income, id: tempId };
       set(state => ({ incomes: [...state.incomes, tempIncome] }));
       
@@ -529,7 +532,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addShift: async (shift) => {
     try {
-      const tempId = crypto.randomUUID();
+      const tempId = generateTempId();
       const tempShift = { ...shift, id: tempId };
       set(state => ({ shifts: [...state.shifts, tempShift] }));
       
@@ -587,7 +590,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addWorkSchedule: async (schedule) => {
     try {
-      const tempId = crypto.randomUUID();
+      const tempId = generateTempId();
       const tempSchedule = { ...schedule, id: tempId };
       set(state => ({ workSchedules: [...state.workSchedules, tempSchedule] }));
       
@@ -612,7 +615,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       const updateData: Record<string, string | number> = { id };
       if (schedule.weeklyHours !== undefined) {
         // 週次時間を日次時間に変換（5日勤務想定）
-        const WORKING_DAYS_PER_WEEK = 5;
         updateData.hours = Math.round(schedule.weeklyHours / WORKING_DAYS_PER_WEEK);
       }
       if (schedule.employerId !== undefined) updateData.employer_id = schedule.employerId;
