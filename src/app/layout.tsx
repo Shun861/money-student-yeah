@@ -4,6 +4,28 @@ import "./globals.css";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ClientErrorProvider } from "@/components/ClientErrorProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { validateEnvironment, checkEnvironmentStatus } from '@/lib/env';
+
+// Issue #46: 起動時環境変数チェック
+if (typeof window === 'undefined') {
+  // サーバーサイドでのみ実行
+  try {
+    validateEnvironment();
+    
+    // 開発環境では詳細な診断情報を表示
+    if (process.env.NODE_ENV === 'development') {
+      const status = checkEnvironmentStatus();
+      console.log(`🚀 Starting on ${status.platform} (${status.environment})`);
+      
+      if (status.warnings.length > 0) {
+        console.warn('⚠️  Environment warnings:', status.warnings);
+      }
+    }
+  } catch (error) {
+    console.error('💥 Failed to start application:', error);
+    throw error;
+  }
+}
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
