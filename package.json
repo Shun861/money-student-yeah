@@ -5,12 +5,14 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "build:analyze": "next build && tsx scripts/analyze-build.ts",
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "playwright test",
     "check:env": "tsx scripts/check-env.ts",
     "check:env:ci": "tsx scripts/check-env.ts && echo 'Environment check passed for CI'",
-    "predev": "npm run check:env"
+    "predev": "npm run check:env",
+    "analyze": "tsx scripts/analyze-build.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.5.3",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@types/dotenv": "^8.2.3",
