@@ -7,10 +7,6 @@ import { markOnboardingCompleted } from "@/lib/profileUtils";
 import Link from "next/link";
 import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
 
-// フォームバリデーション用の型
-interface FormErrors {
-  [key: string]: string;
-}
 import { 
   UserIcon, 
   ShieldCheckIcon, 
