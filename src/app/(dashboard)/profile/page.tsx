@@ -1,6 +1,7 @@
 "use client";
 import { useAppStore } from "@/lib/store";
-import type { StudentType, InsuranceType, ParentInsuranceType, LivingStatus, BracketType } from "@/types";
+import type { CalcResult, UserProfile, Employer, EmployerSize, BracketType, StudentType, InsuranceType, ParentInsuranceType, LivingStatus } from "@/types";
+import { toBracketType } from "@/types";
 import { calculateWalls } from "@/lib/rules";
 import { useState } from "react";
 import { 
@@ -98,7 +99,7 @@ export default function ProfilePage() {
   const removeEmployer = useAppStore((s) => s.removeEmployer);
   const r = calculateWalls(profile, incomes);
   
-  const [selectedBracket, setSelectedBracket] = useState<BracketType>(profile.bracket ?? 103);
+  const [selectedBracket, setSelectedBracket] = useState<BracketType>(toBracketType(profile.bracket));
   const [showDetails, setShowDetails] = useState<BracketType | null>(null);
   const [activeTab, setActiveTab] = useState<'report' | 'settings'>('report');
   
@@ -330,7 +331,7 @@ export default function ProfilePage() {
           </div>
 
           {/* 勤務先サマリー */}
-          {profile.employers.length > 0 && (
+          {profile.employers && profile.employers.length > 0 && (
             <div className="rounded-xl border bg-white p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-4">勤務先サマリー</h3>
               <div className="grid gap-4">
@@ -344,11 +345,11 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">月収見込み:</span>
-                        <span className="font-medium">{employer.monthlyIncome.toLocaleString()}円</span>
+                        <span className="font-medium">{employer.monthlyIncome?.toLocaleString() ?? 0}円</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">通勤手当:</span>
-                        <span className="font-medium">{employer.commutingAllowance.toLocaleString()}円</span>
+                        <span className="font-medium">{employer.commutingAllowance?.toLocaleString() ?? 0}円</span>
                       </div>
                     </div>
                   </div>

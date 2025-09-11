@@ -45,7 +45,7 @@ function ResetPasswordInner() {
     try {
   const supabase = getSupabaseClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+        ...(typeof window !== 'undefined' && { redirectTo: `${window.location.origin}/reset-password` }),
       })
       if (error) throw error
       setMessage('リセット用のメールを送信しました。メールの案内に従ってください。')

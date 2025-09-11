@@ -303,7 +303,10 @@ export default function OnboardingPage() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="例: 50000"
                   value={profile.monthlyAllowance || ""}
-                  onChange={(e) => setProfile({ monthlyAllowance: Number(e.target.value) || undefined })}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setProfile(value > 0 ? { monthlyAllowance: value } : {});
+                  }}
                   min={0}
                   step={1}
                 />
@@ -464,7 +467,10 @@ export default function OnboardingPage() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-3"
                 placeholder="例: 奨学金、副業収入など"
                 value={profile.otherIncome || ""}
-                onChange={(e) => setProfile({ otherIncome: Number(e.target.value) || undefined })}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setProfile(value > 0 ? { otherIncome: value } : {});
+                }}
               />
               <p className="text-xs text-gray-500 mt-1">奨学金、副業収入、投資収入などを含みます</p>
             </div>

@@ -62,7 +62,7 @@ export default function IncomePage() {
       date, 
       employer, 
       amount: Number(amount) || 0,
-      hours: hours ? Number(hours) : undefined
+      ...(hours && { hours: Number(hours) })
     });
     setEmployer("");
     setDate("");

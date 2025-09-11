@@ -21,11 +21,11 @@ export async function middleware(req: NextRequest) {
 	}
 
 	const res = NextResponse.next()
-	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-	const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+	const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']
+	const supabaseAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']
 
 	// Simulation mode for E2E (NODE_ENV=production でも next start 下で許可)
-	if (process.env.E2E_MODE === '1') {
+	if (process.env['E2E_MODE'] === '1') {
 		const e2eAuth = req.cookies.get('e2e-auth')?.value === '1'
 		const e2eOnboarded = req.cookies.get('e2e-onboarded')?.value === '1'
 

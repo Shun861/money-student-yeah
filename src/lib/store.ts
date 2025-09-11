@@ -39,6 +39,14 @@ const WORKING_DAYS_PER_WEEK = 5; // 平日勤務想定
 // ヘルパー関数
 const generateTempId = () => crypto.randomUUID();
 
+// 時給計算（null安全）
+const calculateHourlyWage = (monthlyIncome: number, weeklyHours: number): number => {
+  if (!monthlyIncome || !weeklyHours || weeklyHours === 0) {
+    return DEFAULT_HOURLY_WAGE;
+  }
+  return Math.round(monthlyIncome / (weeklyHours * WEEKS_PER_MONTH));
+};
+
 // マッピング関数
 const mapIncomeFromDb = (income: DbIncomeResponse): IncomeEntry => ({
   id: income.id,
@@ -67,10 +75,6 @@ const mapWorkScheduleFromDb = (schedule: DbWorkScheduleResponse): WorkSchedule =
   endDate: undefined,
 });
 
-// 時給計算のヘルパー関数
-const calculateHourlyWage = (monthlyIncome: number, weeklyHours: number): number | null => {
-  return weeklyHours > 0 ? Math.round(monthlyIncome / (weeklyHours * WEEKS_PER_MONTH)) : null;
-};
 const apiClient = {
   // Profile API
   async getProfile(): Promise<UserProfile> {
@@ -102,7 +106,7 @@ const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: employer.name,
-        hourly_wage: calculateHourlyWage(employer.monthlyIncome, employer.weeklyHours),
+        hourly_wage: calculateHourlyWage(employer.monthlyIncome ?? 0, employer.weeklyHours ?? 0),
         size: employer.employerSize,
       }),
     });
@@ -284,7 +288,7 @@ const apiClient = {
 
   async createWorkSchedule(schedule: Omit<WorkSchedule, 'id'>): Promise<WorkSchedule> {
     // 週間時間を5日間の勤務日で分割（平日想定）
-    const dailyHours = Math.round(schedule.weeklyHours / WORKING_DAYS_PER_WEEK);
+    const dailyHours = Math.round((schedule.weeklyHours ?? 0) / WORKING_DAYS_PER_WEEK);
     
     const response = await fetch('/api/work-schedules', {
       method: 'POST',
@@ -301,8 +305,8 @@ const apiClient = {
     return {
       id: dbSchedule.id,
       employerId: dbSchedule.employer_id,
-      weeklyHours: schedule.weeklyHours,
-      hourlyWage: schedule.hourlyWage,
+      weeklyHours: schedule.weeklyHours ?? 0,
+      hourlyWage: schedule.hourlyWage ?? DEFAULT_HOURLY_WAGE,
       frequency: schedule.frequency,
       startDate: schedule.startDate,
       endDate: schedule.endDate,
