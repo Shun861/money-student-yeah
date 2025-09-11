@@ -10,10 +10,8 @@ interface ShiftResponse {
   user_id: string
   employer_id: string
   date: string
-  start_time: string
-  end_time: string
+  hours: number
   hourly_wage: number | null
-  break_minutes: number | null
   notes: string | null
   created_at: string
   updated_at: string
@@ -107,10 +105,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ShiftResp
     const body = await request.json()
     
     // 基本的なバリデーション
-    const { employer_id, date, start_time, end_time } = body
-    if (!employer_id || !date || !start_time || !end_time) {
+    const { employer_id, date, hours } = body
+    if (!employer_id || !date || typeof hours !== 'number') {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: employer_id, date, hours' },
         { status: 400 }
       )
     }
@@ -137,10 +135,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ShiftResp
         user_id: user.id,
         employer_id,
         date,
-        start_time,
-        end_time,
+        hours,
         hourly_wage: body.hourly_wage || null,
-        break_minutes: body.break_minutes || null,
         notes: body.notes || null
       })
       .select()

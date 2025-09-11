@@ -31,7 +31,6 @@ interface DbWorkScheduleResponse {
 }
 
 // 定数定義
-const DAYS_PER_WEEK = 7;
 const WEEKS_PER_MONTH = 4.33;
 const DEFAULT_HOURLY_WAGE = 1000;
 const DEFAULT_DAY_OF_WEEK = 1; // 月曜日
@@ -57,7 +56,7 @@ const mapShiftFromDb = (shift: DbShiftResponse): ShiftEntry => ({
 const mapWorkScheduleFromDb = (schedule: DbWorkScheduleResponse): WorkSchedule => ({
   id: schedule.id,
   employerId: schedule.employer_id,
-  weeklyHours: schedule.hours * DAYS_PER_WEEK, // day_of_weekベースからweeklyHoursに変換
+  weeklyHours: schedule.hours, // 1日の勤務時間をそのままweeklyHoursに設定（集計は別途実施）
   hourlyWage: DEFAULT_HOURLY_WAGE, // デフォルト値（work_schedulesテーブルに時給フィールドがない）
   frequency: 'weekly' as const,
   startDate: new Date().toISOString().split('T')[0], // デフォルト値
@@ -106,14 +105,14 @@ const apiClient = {
     if (!response.ok) throw new Error('Failed to create employer');
     const dbEmployer = await response.json();
     
-    // DBレスポンスをクライアント型に変換
+    // DBレスポンスをベースにクライアント型に変換（データ整合性のため）
     return {
       id: dbEmployer.id,
       name: dbEmployer.name,
-      weeklyHours: employer.weeklyHours,
-      monthlyIncome: employer.monthlyIncome,
-      commutingAllowance: employer.commutingAllowance,
-      bonus: employer.bonus,
+      weeklyHours: employer.weeklyHours, // 入力値を保持
+      monthlyIncome: employer.monthlyIncome, // 入力値を保持  
+      commutingAllowance: employer.commutingAllowance || 0,
+      bonus: employer.bonus || 0,
       employerSize: dbEmployer.size || 'unknown',
     };
   },
@@ -280,8 +279,9 @@ const apiClient = {
   },
 
   async createWorkSchedule(schedule: Omit<WorkSchedule, 'id'>): Promise<WorkSchedule> {
-    // 週間時間を日次時間に変換（簡易実装）
-    const dailyHours = Math.round(schedule.weeklyHours / DAYS_PER_WEEK);
+    // 週間時間を5日間の勤務日で分割（平日想定）
+    const WORKING_DAYS_PER_WEEK = 5;
+    const dailyHours = Math.round(schedule.weeklyHours / WORKING_DAYS_PER_WEEK);
     
     const response = await fetch('/api/work-schedules', {
       method: 'POST',
@@ -602,18 +602,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  updateWorkSchedule: async (id, schedule) => {
+  updateWorkSchedule: async (_id, _schedule) => {
     try {
-      set(state => ({
-        workSchedules: state.workSchedules.map(s => s.id === id ? { ...s, ...schedule } : s)
-      }));
-      
-      // Work scheduleのアップデートはAPIで未対応のため、アップデートはローカルキャッシュのみ
+      // Work scheduleのアップデートはAPIで未対応のため、未サポート
       // TODO: APIエンドポイントが実装されたら統合
-      set({ lastSyncTime: Date.now() });
+      throw new Error('updateWorkSchedule is not supported: API endpoint not implemented.');
     } catch (error) {
       console.error('Failed to update work schedule:', error);
-      get().loadWorkSchedules();
+      throw error; // エラーを再スローして呼び出し元に通知
     }
   },
 
