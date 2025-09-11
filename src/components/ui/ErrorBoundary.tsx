@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     const appError = fromError(error)
     
     // エラー詳細をログに記録
@@ -57,7 +57,7 @@ ${errorInfo.componentStack}`
     this.setState({ hasError: false, appError: undefined });
   };
 
-  render() {
+  override render() {
     if (this.state.hasError && this.state.appError) {
       // カスタムフォールバックUIがある場合はそれを使用
       if (this.props.fallback) {

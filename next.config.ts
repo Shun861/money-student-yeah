@@ -21,9 +21,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['chart.js', 'react-chartjs-2'],
   },
   // Bundle Analyzerの設定（開発用）
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config: any, { webpack }: { webpack: any }) => {
-      if (process.env.ANALYZE) {
+  ...(process.env['ANALYZE'] === 'true' && {
+    webpack: (config: any) => {
+      if (process.env['ANALYZE']) {
         const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
         config.plugins.push(
           new BundleAnalyzerPlugin({

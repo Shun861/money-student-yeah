@@ -12,7 +12,9 @@
     "check:env": "tsx scripts/check-env.ts",
     "check:env:ci": "tsx scripts/check-env.ts && echo 'Environment check passed for CI'",
     "predev": "npm run check:env",
-    "analyze": "tsx scripts/analyze-build.ts"
+    "analyze": "tsx scripts/analyze-build.ts",
+    "generate-types": "tsx scripts/generate-types.ts",
+    "types": "npm run generate-types"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
@@ -28,6 +30,7 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1",
+    "zod": "^4.1.7",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -42,6 +45,7 @@
     "dotenv": "^17.2.2",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "supabase": "^2.40.7",
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5"

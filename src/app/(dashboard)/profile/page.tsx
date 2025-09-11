@@ -1,6 +1,7 @@
 "use client";
 import { useAppStore } from "@/lib/store";
-import type { StudentType, InsuranceType, ParentInsuranceType, LivingStatus, BracketType } from "@/types";
+import type { CalcResult, UserProfile, Employer, EmployerSize, BracketType, StudentType, InsuranceType, ParentInsuranceType, LivingStatus } from "@/types";
+import { toBracketType } from "@/types";
 import { calculateWalls } from "@/lib/rules";
 import { useState } from "react";
 import { 
@@ -98,7 +99,7 @@ export default function ProfilePage() {
   const removeEmployer = useAppStore((s) => s.removeEmployer);
   const r = calculateWalls(profile, incomes);
   
-  const [selectedBracket, setSelectedBracket] = useState<BracketType>(profile.bracket ?? 103);
+  const [selectedBracket, setSelectedBracket] = useState<BracketType>(toBracketType(profile.bracket));
   const [showDetails, setShowDetails] = useState<BracketType | null>(null);
   const [activeTab, setActiveTab] = useState<'report' | 'settings'>('report');
   
@@ -330,7 +331,7 @@ export default function ProfilePage() {
           </div>
 
           {/* 勤務先サマリー */}
-          {profile.employers.length > 0 && (
+          {profile.employers && profile.employers.length > 0 && (
             <div className="rounded-xl border bg-white p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-4">勤務先サマリー</h3>
               <div className="grid gap-4">
@@ -344,11 +345,11 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">月収見込み:</span>
-                        <span className="font-medium">{employer.monthlyIncome.toLocaleString()}円</span>
+                        <span className="font-medium">{(employer.monthlyIncome ?? 0).toLocaleString()}円</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">通勤手当:</span>
-                        <span className="font-medium">{employer.commutingAllowance.toLocaleString()}円</span>
+                        <span className="font-medium">{(employer.commutingAllowance ?? 0).toLocaleString()}円</span>
                       </div>
                     </div>
                   </div>
@@ -717,7 +718,7 @@ export default function ProfilePage() {
           <section className="rounded-xl border bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold mb-4">勤務先情報</h3>
             <div className="grid gap-4">
-              {profile.employers.length === 0 ? (
+              {(profile.employers?.length ?? 0) === 0 ? (
                 <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
                   <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 mb-3">勤務先情報がありません</p>
@@ -731,7 +732,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {profile.employers.map((employer, index) => (
+                  {profile.employers?.map((employer, index) => (
                     <div key={employer.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium">勤務先 {index + 1}: {employer.name || '未設定'}</h4>

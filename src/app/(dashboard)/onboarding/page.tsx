@@ -102,7 +102,7 @@ export default function OnboardingPage() {
 
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
-  const isStep3Complete = profile.employers.length > 0 && profile.termsAccepted;
+  const isStep3Complete = (profile.employers?.length ?? 0) > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
     if (!isStep3Complete || submitting) return;
@@ -303,7 +303,10 @@ export default function OnboardingPage() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="例: 50000"
                   value={profile.monthlyAllowance || ""}
-                  onChange={(e) => setProfile({ monthlyAllowance: Number(e.target.value) || undefined })}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setProfile({ monthlyAllowance: value > 0 ? value : undefined });
+                  }}
                   min={0}
                   step={1}
                 />
@@ -338,14 +341,14 @@ export default function OnboardingPage() {
                 </button>
               </div>
               
-              {profile.employers.length === 0 ? (
+              {(profile.employers?.length ?? 0) === 0 ? (
                 <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                   <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500">勤務先を追加してください</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {profile.employers.map((employer, index) => (
+                  {profile.employers?.map((employer, index) => (
                     <div key={employer.id} className="border rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-medium">勤務先 {index + 1}</h4>
@@ -464,7 +467,10 @@ export default function OnboardingPage() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-3"
                 placeholder="例: 奨学金、副業収入など"
                 value={profile.otherIncome || ""}
-                onChange={(e) => setProfile({ otherIncome: Number(e.target.value) || undefined })}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setProfile({ otherIncome: value > 0 ? value : undefined });
+                }}
               />
               <p className="text-xs text-gray-500 mt-1">奨学金、副業収入、投資収入などを含みます</p>
             </div>

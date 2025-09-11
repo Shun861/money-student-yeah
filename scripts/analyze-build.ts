@@ -5,7 +5,7 @@ import { pathToFileURL } from 'url';
 
 // Next.jsのビルド出力を分析
 function analyzeBuildOutput() {
-  const buildOutputFile = path.join(process.cwd(), '.next', 'trace');
+  // const buildOutputFile = path.join(process.cwd(), '.next', 'trace'); // 将来の機能拡張用
   const staticDir = path.join(process.cwd(), '.next', 'static');
   
   console.log('🔍 Next.js Build Analysis');
@@ -72,7 +72,7 @@ function analyzeBuildOutput() {
 }
 
 // メイン実行（スクリプトが直接実行された場合のみ）
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   analyzeBuildOutput();
 }
 
