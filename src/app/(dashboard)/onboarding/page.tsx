@@ -469,7 +469,7 @@ export default function OnboardingPage() {
                 value={profile.otherIncome || ""}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  setProfile(value > 0 ? { otherIncome: value } : {});
+                  setProfile({ otherIncome: value > 0 ? value : undefined });
                 }}
               />
               <p className="text-xs text-gray-500 mt-1">奨学金、副業収入、投資収入などを含みます</p>

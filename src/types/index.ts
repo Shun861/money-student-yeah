@@ -109,7 +109,7 @@ export interface UserProfile {
   defaultHourlyWage?: number;
   termsAccepted?: boolean;
   
-  // フロントエンド固有のプロパティ
+    // フロントエンド固有のプロパティ
   employers?: Employer[]; // オプショナルプロパティ
 }
 
@@ -184,12 +184,17 @@ export type Step = 1 | 2 | 3;
 
 // === 型変換ヘルパー関数 ===
 
+// Bracket値の定数
+export const BRACKET_103 = 103;
+export const BRACKET_130 = 130;
+export const BRACKET_150 = 150;
+
 // Supabaseのbracket値をBracketTypeに変換
 export function toBracketType(bracket: number | null | undefined): BracketType {
-  if (bracket === 103 || bracket === 130 || bracket === 150) {
+  if (bracket === BRACKET_103 || bracket === BRACKET_130 || bracket === BRACKET_150) {
     return bracket;
   }
-  return 103; // デフォルト値
+  return BRACKET_103; // デフォルト値
 }
 
 // BracketTypeをSupabaseのnumber値に変換
