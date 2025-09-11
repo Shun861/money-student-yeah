@@ -40,7 +40,7 @@ interface SimulationChartCoreProps {
   monthlyAverage: number;
 }
 
-export function SimulationChartCore({ data, exceedDate, exceedAmount, monthlyAverage }: SimulationChartCoreProps) {
+export default function SimulationChartCore({ data, exceedDate, exceedAmount, monthlyAverage }: SimulationChartCoreProps) {
   const chartRef = useRef<ChartJS<'line'>>(null);
 
   const chartData = {

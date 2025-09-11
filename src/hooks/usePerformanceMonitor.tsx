@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface PerformanceMetrics {
   loadTime: number | null;
@@ -8,6 +8,11 @@ interface PerformanceMetrics {
   networkLatency: number | null;
 }
 
+// パフォーマンス測定結果のキャッシュ
+let cachedMetrics: PerformanceMetrics | null = null;
+let lastMeasurementTime = 0;
+const CACHE_DURATION = 30000; // 30秒間キャッシュ
+
 export function usePerformanceMonitor() {
   const [metrics, setMetrics] = useState<PerformanceMetrics>({
     loadTime: null,
@@ -15,84 +20,123 @@ export function usePerformanceMonitor() {
     bundleSize: null,
     networkLatency: null
   });
+  
+  const measurementInProgress = useRef(false);
 
   useEffect(() => {
+    // キャッシュが有効な場合は使用
+    const now = Date.now();
+    if (cachedMetrics && (now - lastMeasurementTime) < CACHE_DURATION) {
+      setMetrics(cachedMetrics);
+      return;
+    }
+
+    // 既に測定中の場合はスキップ
+    if (measurementInProgress.current) {
+      return;
+    }
+
+    measurementInProgress.current = true;
+
+    // デバウンス付きの測定関数
+    const measureWithDebounce = () => {
+      const timeoutId = setTimeout(() => {
+        runMeasurements();
+        measurementInProgress.current = false;
+      }, 100); // 100ms デバウンス
+
+      return () => {
+        clearTimeout(timeoutId);
+        measurementInProgress.current = false;
+      };
+    };
+
     // ページロード時間を測定
-    const measureLoadTime = () => {
+    const measureLoadTime = (): number | null => {
       if (typeof window !== 'undefined' && 'performance' in window) {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        const loadTime = navigation.loadEventEnd - navigation.fetchStart;
-        
-        setMetrics(prev => ({
-          ...prev,
-          loadTime: Math.round(loadTime)
-        }));
+        if (navigation && navigation.loadEventEnd && navigation.fetchStart) {
+          return Math.round(navigation.loadEventEnd - navigation.fetchStart);
+        }
       }
+      return null;
     };
 
     // レンダリング時間を測定
-    const measureRenderTime = () => {
+    const measureRenderTime = (): number | null => {
       if (typeof window !== 'undefined' && 'performance' in window) {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        const renderTime = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
-        
-        setMetrics(prev => ({
-          ...prev,
-          renderTime: Math.round(renderTime)
-        }));
+        if (navigation && navigation.domContentLoadedEventEnd && navigation.domContentLoadedEventStart) {
+          return Math.round(navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart);
+        }
       }
+      return null;
     };
 
     // ネットワーク待機時間を測定
-    const measureNetworkLatency = () => {
+    const measureNetworkLatency = (): number | null => {
       if (typeof window !== 'undefined' && 'performance' in window) {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        const networkLatency = navigation.responseStart - navigation.requestStart;
-        
-        setMetrics(prev => ({
-          ...prev,
-          networkLatency: Math.round(networkLatency)
-        }));
+        if (navigation && navigation.responseStart && navigation.requestStart) {
+          return Math.round(navigation.responseStart - navigation.requestStart);
+        }
       }
+      return null;
     };
 
     // バンドルサイズを推定（リソースサイズの合計）
-    const estimateBundleSize = () => {
+    const estimateBundleSize = (): number | null => {
       if (typeof window !== 'undefined' && 'performance' in window) {
-        const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-        const jsResources = resources.filter(resource => 
-          resource.name.includes('.js') || resource.name.includes('/_next/')
-        );
-        
-        const totalSize = jsResources.reduce((total, resource) => {
-          return total + (resource.transferSize || 0);
-        }, 0);
-        
-        setMetrics(prev => ({
-          ...prev,
-          bundleSize: Math.round(totalSize / 1024) // KB単位
-        }));
+        try {
+          const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+          const jsResources = resources.filter(resource => 
+            resource.name.includes('.js') || resource.name.includes('/_next/')
+          );
+          
+          const totalSize = jsResources.reduce((total, resource) => {
+            return total + (resource.transferSize || 0);
+          }, 0);
+          
+          return Math.round(totalSize / 1024); // KB単位
+        } catch (error) {
+          console.warn('Bundle size estimation failed:', error);
+          return null;
+        }
       }
+      return null;
     };
 
     // 全ての測定を実行
     const runMeasurements = () => {
-      measureLoadTime();
-      measureRenderTime();
-      measureNetworkLatency();
-      estimateBundleSize();
+      const newMetrics: PerformanceMetrics = {
+        loadTime: measureLoadTime(),
+        renderTime: measureRenderTime(),
+        networkLatency: measureNetworkLatency(),
+        bundleSize: estimateBundleSize()
+      };
+
+      // キャッシュに保存
+      cachedMetrics = newMetrics;
+      lastMeasurementTime = Date.now();
+      
+      setMetrics(newMetrics);
     };
 
     // ページロード完了後に測定
     if (document.readyState === 'complete') {
-      runMeasurements();
+      const cleanup = measureWithDebounce();
+      return cleanup;
     } else {
-      window.addEventListener('load', runMeasurements);
+      const handleLoad = () => {
+        measureWithDebounce();
+      };
+      
+      window.addEventListener('load', handleLoad);
+      return () => {
+        window.removeEventListener('load', handleLoad);
+        measurementInProgress.current = false;
+      };
     }
-
-    return () => {
-      window.removeEventListener('load', runMeasurements);
-    };
   }, []);
 
   return metrics;

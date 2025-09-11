@@ -3,9 +3,7 @@ import { Suspense, lazy } from "react";
 import { ChartLoadingSkeleton } from "./ChartLoadingSkeleton";
 
 // 動的インポートでChart.jsコンポーネントを遅延読み込み
-const IncomePredictionCore = lazy(() => 
-  import('./IncomePredictionCore').then(module => ({ default: module.IncomePredictionCore }))
-);
+const IncomePredictionCore = lazy(() => import('./IncomePredictionCore'));
 
 interface IncomePredictionProps {
   currentMonthlyIncome: number;

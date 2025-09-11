@@ -3,9 +3,7 @@ import { Suspense, lazy } from "react";
 import { ChartLoadingSkeleton } from "./ChartLoadingSkeleton";
 
 // 動的インポートでChart.jsコンポーネントを遅延読み込み
-const SimulationChartCore = lazy(() => 
-  import('./SimulationChartCore').then(module => ({ default: module.SimulationChartCore }))
-);
+const SimulationChartCore = lazy(() => import('./SimulationChartCore'));
 
 interface SimulationData {
   month: string;

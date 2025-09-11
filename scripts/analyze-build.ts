@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { pathToFileURL } from 'url';
 
 // Next.jsのビルド出力を分析
 function analyzeBuildOutput() {
@@ -13,10 +13,16 @@ function analyzeBuildOutput() {
 
   // 静的アセットの分析
   if (fs.existsSync(staticDir)) {
-    const chunks = fs.readdirSync(path.join(staticDir, 'chunks'))
+    const chunksDir = path.join(staticDir, 'chunks');
+    if (!fs.existsSync(chunksDir)) {
+      console.log('⚠️  Chunks directory not found. Please run build first.');
+      return;
+    }
+
+    const chunks = fs.readdirSync(chunksDir)
       .filter(file => file.endsWith('.js'))
       .map(file => {
-        const filePath = path.join(staticDir, 'chunks', file);
+        const filePath = path.join(chunksDir, file);
         const stats = fs.statSync(filePath);
         return {
           name: file,
@@ -43,6 +49,9 @@ function analyzeBuildOutput() {
         console.log(`   - ${chunk.name}: ${chunk.sizeKB} KB`);
       });
     }
+  } else {
+    console.log('⚠️  Static directory not found. Please run build first.');
+    return;
   }
 
   // パフォーマンス推奨事項
@@ -62,8 +71,8 @@ function analyzeBuildOutput() {
   console.log('✅ Core Chart.js logic: Separated into dedicated components');
 }
 
-// メイン実行
-if (import.meta.url === `file://${process.argv[1]}`) {
+// メイン実行（スクリプトが直接実行された場合のみ）
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   analyzeBuildOutput();
 }
 

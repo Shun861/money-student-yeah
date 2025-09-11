@@ -37,7 +37,7 @@ interface IncomePredictionCoreProps {
   months: number;
 }
 
-export function IncomePredictionCore({ currentMonthlyIncome, growthRate, months }: IncomePredictionCoreProps) {
+export default function IncomePredictionCore({ currentMonthlyIncome, growthRate, months }: IncomePredictionCoreProps) {
   const [customGrowthRate, setCustomGrowthRate] = useState(growthRate);
   const [customMonths, setCustomMonths] = useState(months);
 
