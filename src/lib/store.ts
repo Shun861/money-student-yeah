@@ -63,6 +63,11 @@ const mapWorkScheduleFromDb = (schedule: DbWorkScheduleResponse): WorkSchedule =
   startDate: new Date().toISOString().split('T')[0], // デフォルト値
   endDate: undefined,
 });
+
+// 時給計算のヘルパー関数
+const calculateHourlyWage = (monthlyIncome: number, weeklyHours: number): number | null => {
+  return weeklyHours > 0 ? Math.round(monthlyIncome / (weeklyHours * WEEKS_PER_MONTH)) : null;
+};
 const apiClient = {
   // Profile API
   async getProfile(): Promise<UserProfile> {
@@ -94,7 +99,7 @@ const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: employer.name,
-        hourly_wage: employer.weeklyHours > 0 ? Math.round(employer.monthlyIncome / (employer.weeklyHours * WEEKS_PER_MONTH)) : null,
+        hourly_wage: calculateHourlyWage(employer.monthlyIncome, employer.weeklyHours),
         size: employer.employerSize,
       }),
     });
@@ -118,7 +123,10 @@ const apiClient = {
     if (employer.name) updateData.name = employer.name;
     if (employer.employerSize) updateData.size = employer.employerSize;
     if (employer.weeklyHours && employer.monthlyIncome) {
-      updateData.hourly_wage = Math.round(employer.monthlyIncome / (employer.weeklyHours * WEEKS_PER_MONTH));
+      const hourlyWage = calculateHourlyWage(employer.monthlyIncome, employer.weeklyHours);
+      if (hourlyWage !== null) {
+        updateData.hourly_wage = hourlyWage;
+      }
     }
 
     const response = await fetch('/api/employers', {
@@ -600,9 +608,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         workSchedules: state.workSchedules.map(s => s.id === id ? { ...s, ...schedule } : s)
       }));
       
-      // 注意: work-schedulesにはUPDATEエンドポイントがないため、実装未対応
-      throw new Error('Work schedule update is not implemented in the API');
-      // set({ lastSyncTime: Date.now() });
+      // Work scheduleのアップデートはAPIで未対応のため、アップデートはローカルキャッシュのみ
+      // TODO: APIエンドポイントが実装されたら統合
+      set({ lastSyncTime: Date.now() });
     } catch (error) {
       console.error('Failed to update work schedule:', error);
       get().loadWorkSchedules();
