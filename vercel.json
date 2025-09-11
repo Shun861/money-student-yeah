@@ -19,6 +19,5 @@
     "NEXT_PUBLIC_GA_MEASUREMENT_ID": {
       "description": "Google Analytics measurement ID (optional)"
     }
-  },
-  "envDescription": "Environment variables required for the application to run. See .env.example for detailed configuration."
+  }
 }
