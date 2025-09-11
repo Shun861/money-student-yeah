@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useHydratedStore } from "@/hooks/useHydration";
+import { useAppStore } from "@/lib/store";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { markOnboardingCompleted } from "@/lib/profileUtils";
 import Link from "next/link";
@@ -30,12 +30,11 @@ import {
 import { helpContent } from "@/constants/helpContent";
 
 export default function OnboardingPage() {
-  const { hydrated, store } = useHydratedStore();
-  const profile = store.profile;
-  const setProfile = store.setProfile;
-  const addEmployer = store.addEmployer;
-  const removeEmployer = store.removeEmployer;
-  const updateEmployerStore = store.updateEmployer;
+  const profile = useAppStore((s) => s.profile);
+  const setProfile = useAppStore((s) => s.setProfile);
+  const addEmployer = useAppStore((s) => s.addEmployer);
+  const removeEmployer = useAppStore((s) => s.removeEmployer);
+  const updateEmployer = useAppStore((s) => s.updateEmployer);
   const router = useRouter();
   
   // すべてのstate hookを先頭で宣言
@@ -50,15 +49,6 @@ export default function OnboardingPage() {
   useEffect(() => {
     setShowAllowanceInput(profile.livingStatus === "living_separately");
   }, [profile.livingStatus]);
-
-  // ハイドレーション待機中のローディング表示
-  if (!hydrated) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-gray-500">読み込み中...</div>
-      </div>
-    );
-  }
 
   const steps = [
     {
@@ -106,10 +96,6 @@ export default function OnboardingPage() {
     addEmployer(newEmployer);
   };
 
-  const updateEmployer = (id: string, updates: Partial<Employer>) => {
-    updateEmployerStore(id, updates);
-  };
-
   const removeEmployerById = (id: string) => {
     removeEmployer(id);
   };
@@ -135,9 +121,6 @@ export default function OnboardingPage() {
       if (!success) {
         throw new Error('オンボーディング完了の記録に失敗しました');
       }
-
-      // ローカルストレージにも保存（既存の互換性のため）
-      localStorage.setItem('onboarding_completed', 'true');
       
       // 成功したら直接ダッシュボードに遷移
       router.push('/dashboard');

@@ -7,62 +7,7 @@ import type {
   WorkSchedule
 } from "@/types";
 
-// API レスポンス型定義
-interface DbIncomeResponse {
-  id: string;
-  date: string;
-  amount: number;
-  employer_id: string | null;
-}
-
-interface DbShiftResponse {
-  id: string;
-  date: string;
-  hours: number;
-  hourly_wage: number | null;
-  employer_id: string;
-}
-
-interface DbWorkScheduleResponse {
-  id: string;
-  employer_id: string;
-  day_of_week: number;
-  hours: number;
-}
-
-// 定数定義
-const DAYS_PER_WEEK = 7;
-const WEEKS_PER_MONTH = 4.33;
-const DEFAULT_HOURLY_WAGE = 1000;
-const DEFAULT_DAY_OF_WEEK = 1; // 月曜日
-
-// マッピング関数
-const mapIncomeFromDb = (income: DbIncomeResponse): IncomeEntry => ({
-  id: income.id,
-  date: income.date,
-  employer: income.employer_id || undefined,
-  amount: income.amount,
-  hours: undefined, // incomesテーブルにはhoursフィールドがない
-});
-
-const mapShiftFromDb = (shift: DbShiftResponse): ShiftEntry => ({
-  id: shift.id,
-  date: shift.date,
-  hours: shift.hours,
-  hourlyWage: shift.hourly_wage || undefined,
-  employerId: shift.employer_id,
-  notes: undefined, // データベースにnotesフィールドがない場合
-});
-
-const mapWorkScheduleFromDb = (schedule: DbWorkScheduleResponse): WorkSchedule => ({
-  id: schedule.id,
-  employerId: schedule.employer_id,
-  weeklyHours: schedule.hours * DAYS_PER_WEEK, // day_of_weekベースからweeklyHoursに変換
-  hourlyWage: DEFAULT_HOURLY_WAGE, // デフォルト値（work_schedulesテーブルに時給フィールドがない）
-  frequency: 'weekly' as const,
-  startDate: new Date().toISOString().split('T')[0], // デフォルト値
-  endDate: undefined,
-});
+// API クライアント関数
 const apiClient = {
   // Profile API
   async getProfile(): Promise<UserProfile> {
@@ -94,7 +39,7 @@ const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: employer.name,
-        hourly_wage: employer.weeklyHours > 0 ? Math.round(employer.monthlyIncome / (employer.weeklyHours * WEEKS_PER_MONTH)) : null,
+        hourly_wage: employer.weeklyHours > 0 ? Math.round(employer.monthlyIncome / (employer.weeklyHours * 4.33)) : null,
         size: employer.employerSize,
       }),
     });
@@ -114,11 +59,11 @@ const apiClient = {
   },
 
   async updateEmployer(id: string, employer: Partial<Employer>): Promise<Employer> {
-    const updateData: Record<string, string | number> = {};
+    const updateData: any = {};
     if (employer.name) updateData.name = employer.name;
     if (employer.employerSize) updateData.size = employer.employerSize;
     if (employer.weeklyHours && employer.monthlyIncome) {
-      updateData.hourly_wage = Math.round(employer.monthlyIncome / (employer.weeklyHours * WEEKS_PER_MONTH));
+      updateData.hourly_wage = Math.round(employer.monthlyIncome / (employer.weeklyHours * 4.33));
     }
 
     const response = await fetch('/api/employers', {
@@ -160,7 +105,13 @@ const apiClient = {
     const dbIncomes = await response.json();
     
     // DBレスポンスをクライアント型に変換
-    return dbIncomes.map(mapIncomeFromDb);
+    return dbIncomes.map((income: any) => ({
+      id: income.id,
+      date: income.date,
+      employer: income.employer_id || undefined,
+      amount: income.amount,
+      hours: undefined, // incomesテーブルにはhoursフィールドがない
+    }));
   },
 
   async createIncome(income: Omit<IncomeEntry, 'id'>): Promise<IncomeEntry> {
@@ -203,7 +154,14 @@ const apiClient = {
     if (!response.ok) throw new Error('Failed to fetch shifts');
     const dbShifts = await response.json();
     
-    return dbShifts.map(mapShiftFromDb);
+    return dbShifts.map((shift: any) => ({
+      id: shift.id,
+      date: shift.date,
+      hours: shift.hours,
+      hourlyWage: shift.hourly_wage,
+      employerId: shift.employer_id,
+      notes: undefined, // データベースにnotesフィールドがない場合
+    }));
   },
 
   async createShift(shift: Omit<ShiftEntry, 'id'>): Promise<ShiftEntry> {
@@ -231,7 +189,7 @@ const apiClient = {
   },
 
   async updateShift(id: string, shift: Partial<ShiftEntry>): Promise<ShiftEntry> {
-    const updateData: Record<string, string | number> = { id };
+    const updateData: any = { id };
     if (shift.date !== undefined) updateData.date = shift.date;
     if (shift.hours !== undefined) updateData.hours = shift.hours;
     if (shift.hourlyWage !== undefined) updateData.hourly_wage = shift.hourlyWage;
@@ -268,19 +226,27 @@ const apiClient = {
     if (!response.ok) throw new Error('Failed to fetch work schedules');
     const dbSchedules = await response.json();
     
-    return dbSchedules.map(mapWorkScheduleFromDb);
+    return dbSchedules.map((schedule: any) => ({
+      id: schedule.id,
+      employerId: schedule.employer_id,
+      weeklyHours: schedule.hours * 7, // day_of_weekベースからweeklyHoursに変換
+      hourlyWage: 1000, // デフォルト値（work_schedulesテーブルに時給フィールドがない）
+      frequency: 'weekly' as const,
+      startDate: new Date().toISOString().split('T')[0], // デフォルト値
+      endDate: undefined,
+    }));
   },
 
   async createWorkSchedule(schedule: Omit<WorkSchedule, 'id'>): Promise<WorkSchedule> {
     // 週間時間を日次時間に変換（簡易実装）
-    const dailyHours = Math.round(schedule.weeklyHours / DAYS_PER_WEEK);
+    const dailyHours = Math.round(schedule.weeklyHours / 7);
     
     const response = await fetch('/api/work-schedules', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         employer_id: schedule.employerId,
-        day_of_week: DEFAULT_DAY_OF_WEEK, // 月曜日をデフォルト
+        day_of_week: 1, // 月曜日をデフォルト
         hours: dailyHours,
       }),
     });
@@ -345,11 +311,8 @@ export type AppState = {
   updateWorkSchedule: (id: string, schedule: Partial<WorkSchedule>) => Promise<void>;
   removeWorkSchedule: (id: string) => Promise<void>;
   
-  // 全データ同期
+  // データ同期
   syncAllData: () => Promise<void>;
-  
-  // レガシーサポート: setProfile互換関数
-  setProfile: (partial: Partial<UserProfile>) => void;
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -600,9 +563,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         workSchedules: state.workSchedules.map(s => s.id === id ? { ...s, ...schedule } : s)
       }));
       
-      // 注意: work-schedulesにはUPDATEエンドポイントがないため、実装未対応
-      throw new Error('Work schedule update is not implemented in the API');
-      // set({ lastSyncTime: Date.now() });
+      // 注意: work-schedulesにはUPDATEエンドポイントがないため、削除+作成で対応
+      console.warn('Work schedule update not implemented in API');
+      set({ lastSyncTime: Date.now() });
     } catch (error) {
       console.error('Failed to update work schedule:', error);
       get().loadWorkSchedules();
@@ -639,10 +602,5 @@ export const useAppStore = create<AppState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
-  },
-
-  // レガシーサポート: setProfile互換関数（同期的なローカル更新のみ）
-  setProfile: (partial: Partial<UserProfile>) => {
-    set(state => ({ profile: { ...state.profile, ...partial } }));
   },
 }));

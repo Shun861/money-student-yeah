@@ -1,5 +1,5 @@
 "use client"
-import { useHydratedStore } from "@/hooks/useHydration";
+import { useAppStore } from "@/lib/store";
 import { useIsOnboardingCompleted } from "@/lib/profileUtils";
 import { calculateWalls } from "@/lib/rules";
 import { 
@@ -13,13 +13,12 @@ import {
 import { Card } from "@/components/ui/Card";
 
 export default function DashboardPage() {
-  const { hydrated, store } = useHydratedStore();
-  const profile = store.profile;
-  const incomes = store.incomes;
+  const profile = useAppStore((s) => s.profile);
+  const incomes = useAppStore((s) => s.incomes);
   const { isCompleted, isLoading } = useIsOnboardingCompleted();
   
-  // ハイドレーション待機中またはオンボーディング状態をロード中
-  if (!hydrated || isLoading) {
+  // オンボーディング状態をロード中
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="text-gray-500">読み込み中...</div>

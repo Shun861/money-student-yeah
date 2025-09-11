@@ -41,8 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # testing & reports
+
 playwright-report/
 test-results/
-
-# VS Code settings
 .vscode/
