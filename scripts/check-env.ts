@@ -51,6 +51,4 @@ function main() {
   console.log('\n🎉 All required environment variables are configured!');
 }
 
-if (require.main === module) {
-  main();
-}
+main();

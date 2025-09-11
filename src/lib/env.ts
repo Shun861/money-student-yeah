@@ -15,6 +15,11 @@ export interface AppConfig {
 }
 
 /**
+ * バリデーション定数
+ */
+const MIN_ANON_KEY_LENGTH = 50;
+
+/**
  * 環境変数バリデーションエラー
  */
 export class EnvironmentValidationError extends Error {
@@ -49,7 +54,7 @@ export function getSupabaseEnv(): SupabaseConfig {
     invalidVars.push('NEXT_PUBLIC_SUPABASE_URL (invalid format)');
   }
 
-  if (anonKey && anonKey.length < 50) {
+  if (anonKey && anonKey.length < MIN_ANON_KEY_LENGTH) {
     invalidVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY (too short)');
   }
 
