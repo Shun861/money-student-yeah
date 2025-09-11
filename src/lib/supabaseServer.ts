@@ -9,7 +9,7 @@ type CookieStoreLike = {
 
 export function createSupabaseServerClient() {
   const cookieStore = cookies() as unknown as CookieStoreLike;
-  const { url: supabaseUrl, anon: supabaseAnonKey } = getSupabaseEnv();
+  const { url: supabaseUrl, anonKey: supabaseAnonKey } = getSupabaseEnv();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
