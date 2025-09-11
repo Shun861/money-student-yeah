@@ -59,7 +59,6 @@ export default function IncomePage() {
   const onAdd = () => {
     if (!date || !amount) return;
     addIncome({ 
-      id: crypto.randomUUID(), 
       date, 
       employer, 
       amount: Number(amount) || 0,

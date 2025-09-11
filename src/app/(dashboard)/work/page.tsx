@@ -62,8 +62,7 @@ export default function WorkPage() {
   }
 
   const addNewSchedule = () => {
-    const newSchedule: WorkSchedule = {
-      id: crypto.randomUUID(),
+    const newSchedule: Omit<WorkSchedule, 'id'> = {
       employerId: profile.employers[0]?.id || "",
       weeklyHours: 0,
       hourlyWage: profile.defaultHourlyWage || 0,
@@ -75,8 +74,7 @@ export default function WorkPage() {
   };
 
   const addNewShift = () => {
-    const newShift: ShiftEntry = {
-      id: crypto.randomUUID(),
+    const newShift: Omit<ShiftEntry, 'id'> = {
       date: new Date().toISOString().split('T')[0],
       hours: 0,
       hourlyWage: profile.defaultHourlyWage || 0,
