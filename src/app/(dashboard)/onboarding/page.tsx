@@ -47,7 +47,6 @@ export default function OnboardingPage() {
   const [showAllowanceInput, setShowAllowanceInput] = useState(
     profile.livingStatus === "living_separately"
   );
-  const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
