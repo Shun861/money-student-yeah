@@ -6,6 +6,7 @@ import { getSupabaseClient } from "@/lib/supabaseClient";
 import { markOnboardingCompleted } from "@/lib/profileUtils";
 import Link from "next/link";
 import type { Step, StudentType, InsuranceType, ParentInsuranceType, LivingStatus, Employer, EmployerSize } from "@/types";
+
 import { 
   UserIcon, 
   ShieldCheckIcon, 
@@ -33,13 +34,21 @@ export default function OnboardingPage() {
   const setProfile = useAppStore((s) => s.setProfile);
   const addEmployer = useAppStore((s) => s.addEmployer);
   const removeEmployer = useAppStore((s) => s.removeEmployer);
-  const updateEmployerStore = useAppStore((s) => s.updateEmployer);
+  const updateEmployer = useAppStore((s) => s.updateEmployer);
   const router = useRouter();
   
+  // すべてのstate hookを先頭で宣言
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [showAllowanceInput, setShowAllowanceInput] = useState(
     profile.livingStatus === "living_separately"
   );
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // 同居状況の変更を監視
+  useEffect(() => {
+    setShowAllowanceInput(profile.livingStatus === "living_separately");
+  }, [profile.livingStatus]);
 
   const steps = [
     {
@@ -61,11 +70,6 @@ export default function OnboardingPage() {
       icon: CurrencyYenIcon
     }
   ];
-
-  // 同居状況の変更を監視
-  useEffect(() => {
-    setShowAllowanceInput(profile.livingStatus === "living_separately");
-  }, [profile.livingStatus]);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -92,10 +96,6 @@ export default function OnboardingPage() {
     addEmployer(newEmployer);
   };
 
-  const updateEmployer = (id: string, updates: Partial<Employer>) => {
-    updateEmployerStore(id, updates);
-  };
-
   const removeEmployerById = (id: string) => {
     removeEmployer(id);
   };
@@ -103,8 +103,6 @@ export default function OnboardingPage() {
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
   const isStep3Complete = profile.employers.length > 0 && profile.termsAccepted;
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const completeOnboarding = async () => {
     if (!isStep3Complete || submitting) return;
@@ -123,9 +121,6 @@ export default function OnboardingPage() {
       if (!success) {
         throw new Error('オンボーディング完了の記録に失敗しました');
       }
-
-      // ローカルストレージにも保存（既存の互換性のため）
-      localStorage.setItem('onboarding_completed', 'true');
       
       // 成功したら直接ダッシュボードに遷移
       router.push('/dashboard');

@@ -66,7 +66,10 @@ export async function middleware(req: NextRequest) {
 
 	const {
 		data: { user },
-	} = await supabase.auth.getUser().catch(() => ({ data: { user: null } as any }))
+	} = await supabase.auth.getUser().catch(() => ({ 
+		data: { user: null }, 
+		error: null 
+	}))
 
 		if (!user) {
 			if (pathname !== LOGIN_PATH) {
