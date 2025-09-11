@@ -56,7 +56,7 @@ const mapShiftFromDb = (shift: DbShiftResponse): ShiftEntry => ({
 const mapWorkScheduleFromDb = (schedule: DbWorkScheduleResponse): WorkSchedule => ({
   id: schedule.id,
   employerId: schedule.employer_id,
-  weeklyHours: schedule.hours, // 1日の勤務時間をそのままweeklyHoursに設定（集計は別途実施）
+  weeklyHours: schedule.hours * 7, // 1日あたりの時間を週次に変換（概算）
   hourlyWage: DEFAULT_HOURLY_WAGE, // デフォルト値（work_schedulesテーブルに時給フィールドがない）
   frequency: 'weekly' as const,
   startDate: new Date().toISOString().split('T')[0], // デフォルト値
@@ -602,14 +602,46 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  updateWorkSchedule: async (_id, _schedule) => {
+  updateWorkSchedule: async (id, schedule) => {
     try {
-      // Work scheduleのアップデートはAPIで未対応のため、未サポート
-      // TODO: APIエンドポイントが実装されたら統合
-      throw new Error('updateWorkSchedule is not supported: API endpoint not implemented.');
+      set(state => ({
+        workSchedules: state.workSchedules.map(s => s.id === id ? { ...s, ...schedule } : s)
+      }));
+      
+      // APIエンドポイントへのPUTリクエスト
+      const updateData: Record<string, string | number> = { id };
+      if (schedule.weeklyHours !== undefined) {
+        // 週次時間を日次時間に変換（5日勤務想定）
+        const WORKING_DAYS_PER_WEEK = 5;
+        updateData.hours = Math.round(schedule.weeklyHours / WORKING_DAYS_PER_WEEK);
+      }
+      if (schedule.employerId !== undefined) updateData.employer_id = schedule.employerId;
+
+      const response = await fetch('/api/work-schedules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update work schedule');
+      
+      const updatedSchedule = await response.json();
+      set(state => ({
+        workSchedules: state.workSchedules.map(s => s.id === id ? {
+          ...s,
+          id: updatedSchedule.id,
+          employerId: updatedSchedule.employer_id,
+          weeklyHours: schedule.weeklyHours || s.weeklyHours,
+          hourlyWage: schedule.hourlyWage || s.hourlyWage,
+          frequency: schedule.frequency || s.frequency,
+          startDate: schedule.startDate || s.startDate,
+          endDate: schedule.endDate || s.endDate,
+        } : s),
+        lastSyncTime: Date.now()
+      }));
     } catch (error) {
       console.error('Failed to update work schedule:', error);
-      throw error; // エラーを再スローして呼び出し元に通知
+      get().loadWorkSchedules();
     }
   },
 

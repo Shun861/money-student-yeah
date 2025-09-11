@@ -62,19 +62,29 @@ function getInitialStore() {
     incomes: [],
     shifts: [],
     workSchedules: [],
-    // アクション関数はダミー
+    // アクション関数はダミー（非同期版）
     setProfile: () => {},
-    addIncome: () => {},
-    removeIncome: () => {},
-    addShift: () => {},
-    updateShift: () => {},
-    removeShift: () => {},
-    addEmployer: () => {},
-    updateEmployer: () => {},
-    removeEmployer: () => {},
-    addWorkSchedule: () => {},
-    updateWorkSchedule: () => {},
-    removeWorkSchedule: () => {},
+    loadProfile: async () => {},
+    updateProfile: async () => {},
+    loadEmployers: async () => {},
+    addEmployer: async () => {},
+    updateEmployer: async () => {},
+    removeEmployer: async () => {},
+    loadIncomes: async () => {},
+    addIncome: async () => {},
+    removeIncome: async () => {},
+    loadShifts: async () => {},
+    addShift: async () => {},
+    updateShift: async () => {},
+    removeShift: async () => {},
+    loadWorkSchedules: async () => {},
+    addWorkSchedule: async () => {},
+    updateWorkSchedule: async () => {},
+    removeWorkSchedule: async () => {},
+    syncAllData: async () => {},
+    isLoading: false,
+    lastSyncTime: null,
+    employers: [],
   }
 }
 
@@ -82,10 +92,9 @@ function getInitialStore() {
  * 安全なストアアクセス（ローディング表示付き）
  */
 export function useStoreWithFallback() {
-  const { hydrated, store } = useHydratedStore()
+  const { store } = useHydratedStore()
 
   return {
-    isLoading: !hydrated,
     ...store,
   }
 }
