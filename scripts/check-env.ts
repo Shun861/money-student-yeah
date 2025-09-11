@@ -7,11 +7,10 @@
 
 import dotenv from 'dotenv';
 import path from 'path';
+import { checkEnvironmentStatus } from '../src/lib/env';
 
 // .env.local ファイルを読み込み
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-
-import { checkEnvironmentStatus } from '../src/lib/env';
 
 function main() {
   console.log('🔍 Environment Variables Check\n');

@@ -45,7 +45,7 @@ export function getSupabaseEnv(): SupabaseConfig {
   }
 
   // フォーマットチェック
-  if (url && !url.startsWith('https://') && !url.includes('.supabase.co')) {
+  if (url && (!url.startsWith('https://') || !url.includes('.supabase.co'))) {
     invalidVars.push('NEXT_PUBLIC_SUPABASE_URL (invalid format)');
   }
 
@@ -71,11 +71,6 @@ export function getSupabaseEnv(): SupabaseConfig {
         anonKey: anonKey ?? '' 
       };
     }
-  }
-
-  // URL形式の基本検証
-  if (url && !url.startsWith('https://')) {
-    console.warn(`⚠️  [ENV WARNING] NEXT_PUBLIC_SUPABASE_URL should start with https://`);
   }
 
   return { url: url!, anonKey: anonKey! };
