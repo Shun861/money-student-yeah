@@ -62,7 +62,7 @@ export default function WorkPage() {
 
   const addNewSchedule = () => {
     const newSchedule: Omit<WorkSchedule, 'id'> = {
-      employerId: profile.employers[0]?.id || "",
+      employerId: profile.employers?.[0]?.id || "",
       weeklyHours: 0,
       hourlyWage: profile.defaultHourlyWage || 0,
       frequency: 'weekly',
@@ -77,7 +77,7 @@ export default function WorkPage() {
       date: new Date().toISOString().split('T')[0],
       hours: 0,
       hourlyWage: profile.defaultHourlyWage || 0,
-      employerId: profile.employers[0]?.id || ""
+      employerId: profile.employers?.[0]?.id || ""
     };
     addShift(newShift);
     setShowAddShift(false);
@@ -201,7 +201,7 @@ export default function WorkPage() {
               ) : (
                 <div className="grid gap-6">
                   {workSchedules.map((schedule) => {
-                    const employer = profile.employers.find(e => e.id === schedule.employerId);
+                    const employer = profile.employers?.find(e => e.id === schedule.employerId);
                     const monthlyIncome = calculateMonthlyIncome(schedule);
                     
                     return (
@@ -294,9 +294,9 @@ export default function WorkPage() {
                         勤務先
                       </label>
                       <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
-                        {profile.employers.map(employer => (
+                        {profile.employers?.map(employer => (
                           <option key={employer.id} value={employer.id}>{employer.name}</option>
-                        ))}
+                        )) ?? []}
                       </select>
                     </div>
                     <div>
@@ -377,7 +377,7 @@ export default function WorkPage() {
               ) : (
                 <div className="grid gap-4">
                   {shifts.map((shift) => {
-                    const employer = profile.employers.find(e => e.id === shift.employerId);
+                    const employer = profile.employers?.find(e => e.id === shift.employerId);
                     const shiftIncome = shift.hours * (shift.hourlyWage || 0);
                     
                     return (

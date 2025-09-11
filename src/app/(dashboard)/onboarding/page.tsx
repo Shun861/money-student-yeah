@@ -102,7 +102,7 @@ export default function OnboardingPage() {
 
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
-  const isStep3Complete = profile.employers.length > 0 && profile.termsAccepted;
+  const isStep3Complete = (profile.employers?.length ?? 0) > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
     if (!isStep3Complete || submitting) return;
@@ -305,7 +305,7 @@ export default function OnboardingPage() {
                   value={profile.monthlyAllowance || ""}
                   onChange={(e) => {
                     const value = Number(e.target.value);
-                    setProfile(value > 0 ? { monthlyAllowance: value } : {});
+                    setProfile({ monthlyAllowance: value > 0 ? value : undefined });
                   }}
                   min={0}
                   step={1}
@@ -341,14 +341,14 @@ export default function OnboardingPage() {
                 </button>
               </div>
               
-              {profile.employers.length === 0 ? (
+              {(profile.employers?.length ?? 0) === 0 ? (
                 <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                   <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500">勤務先を追加してください</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {profile.employers.map((employer, index) => (
+                  {profile.employers?.map((employer, index) => (
                     <div key={employer.id} className="border rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-medium">勤務先 {index + 1}</h4>

@@ -41,7 +41,7 @@ const generateTempId = () => crypto.randomUUID();
 
 // 時給計算（null安全）
 const calculateHourlyWage = (monthlyIncome: number, weeklyHours: number): number => {
-  if (!monthlyIncome || !weeklyHours || weeklyHours === 0) {
+  if (monthlyIncome <= 0 || weeklyHours <= 0) {
     return DEFAULT_HOURLY_WAGE;
   }
   return Math.round(monthlyIncome / (weeklyHours * WEEKS_PER_MONTH));

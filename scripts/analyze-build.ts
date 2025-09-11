@@ -72,7 +72,7 @@ function analyzeBuildOutput() {
 }
 
 // メイン実行（スクリプトが直接実行された場合のみ）
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   analyzeBuildOutput();
 }
 

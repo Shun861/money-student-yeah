@@ -110,7 +110,7 @@ export interface UserProfile {
   termsAccepted?: boolean;
   
   // フロントエンド固有のプロパティ
-  employers: Employer[]; // 必須プロパティに変更
+  employers?: Employer[]; // オプショナルプロパティ
 }
 
 // IncomeEntry型（既存コードとの互換性を保ちつつSupabase型をベース化）

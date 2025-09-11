@@ -36,8 +36,8 @@ function extractProjectIdFromUrl(url: string): string | null {
  */
 function getSupabaseConfig(): GenerateTypesConfig {
   const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
-  const projectId = process.env['SUPABASE_PROJECT_ID'] || 
-    (supabaseUrl ? extractProjectIdFromUrl(supabaseUrl) : null);
+  const projectId = process.env['SUPABASE_PROJECT_ID'] ||
+    (typeof supabaseUrl === 'string' && supabaseUrl.length > 0 ? extractProjectIdFromUrl(supabaseUrl) : null);
 
   if (!projectId) {
     throw new Error(

@@ -74,7 +74,7 @@ export default function PredictionPage() {
           <div className="bg-white p-4 rounded-lg border">
             <div className="text-sm text-gray-600 mb-1">勤務先数</div>
             <div className="text-2xl font-bold text-purple-600">
-              {profile.employers.length}社
+              {profile.employers?.length ?? 0}社
             </div>
           </div>
         </div>
