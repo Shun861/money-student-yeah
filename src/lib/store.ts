@@ -339,7 +339,7 @@ export type AppState = {
   
   // DB-first操作 - Employers
   loadEmployers: () => Promise<void>;
-  addEmployer: (employer: Omit<Employer, 'id'>) => Promise<void>;
+  addEmployer: (employer: Omit<Employer, 'id'>) => Promise<Employer>;
   updateEmployer: (id: string, employer: Partial<Employer>) => Promise<void>;
   removeEmployer: (id: string) => Promise<void>;
   
@@ -443,10 +443,14 @@ export const useAppStore = create<AppState>((set, get) => ({
         employers: state.employers.map(e => e.id === tempId ? newEmployer : e),
         lastSyncTime: Date.now()
       }));
+      
+      // 作成された雇用者を返す
+      return newEmployer;
     } catch (error) {
       console.error('Failed to add employer:', error);
       // エラー時は楽観的更新を取り消し
       get().loadEmployers();
+      throw error; // エラーを再throw
     }
   },
 
