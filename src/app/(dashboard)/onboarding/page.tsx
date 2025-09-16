@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { getSupabaseClient } from "@/lib/supabaseClient";
@@ -131,7 +131,10 @@ export default function OnboardingPage() {
       setLocalEmployers(prev => prev.filter(emp => emp.id !== employer.id));
     } catch (error) {
       console.error('Failed to save employer:', error);
-      throw error;
+      throw new Error(
+        `Failed to save employer "${employer.name ?? employer.id ?? 'unknown'}": ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error }
+      );
     } finally {
       setSavingEmployers(prev => {
         const newSet = new Set(prev);
@@ -144,8 +147,8 @@ export default function OnboardingPage() {
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
   
-  // 全ての雇用者（ローカル + 保存済み）を取得
-  const allEmployers = [...(profile.employers || []), ...localEmployers];
+  // 全ての雇用者（ローカル + 保存済み）を取得（useMemoで最適化）
+  const allEmployers = useMemo(() => [...(profile.employers || []), ...localEmployers], [profile.employers, localEmployers]);
   const isStep3Complete = allEmployers.length > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
@@ -154,9 +157,27 @@ export default function OnboardingPage() {
     setSubmitError(null);
     try {
       // 未保存のローカル雇用者を先に保存
-      for (const employer of localEmployers) {
-        if (employer.name?.trim()) {
-          await saveEmployer(employer);
+      const validLocalEmployers = localEmployers.filter(emp => emp.name?.trim());
+      const invalidLocalEmployers = localEmployers.filter(emp => !emp.name?.trim());
+      
+      // バリデーションエラーがある場合は事前に通知
+      if (invalidLocalEmployers.length > 0) {
+        throw new Error(`${invalidLocalEmployers.length}件の勤務先に名前が入力されていません。すべての勤務先に名前を入力してください。`);
+      }
+      
+      // 一括保存の実行（Promise.allSettledで部分的失敗に対応）
+      if (validLocalEmployers.length > 0) {
+        const saveResults = await Promise.allSettled(
+          validLocalEmployers.map(employer => saveEmployer(employer))
+        );
+        
+        const failedSaves = saveResults
+          .map((result, index) => ({ result, employer: validLocalEmployers[index] }))
+          .filter(({ result }) => result.status === 'rejected');
+        
+        if (failedSaves.length > 0) {
+          const failedNames = failedSaves.map(({ employer }) => employer.name || employer.id).join(', ');
+          throw new Error(`以下の勤務先の保存に失敗しました: ${failedNames}。再度お試しください。`);
         }
       }
 
