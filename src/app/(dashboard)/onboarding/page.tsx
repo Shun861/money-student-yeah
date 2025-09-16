@@ -130,22 +130,8 @@ export default function OnboardingPage() {
       const { id, ...employerData } = employer;
       const savedEmployer = await addEmployer(employerData);
       
-      // デバッグログ（保存前の状態）
-      console.log('Before removing from local:', {
-        originalId: employer.id,
-        savedEmployer: savedEmployer,
-        currentLocalEmployers: localEmployers,
-        currentProfileEmployers: employers
-      });
-      
       // 成功時はローカルから削除（storeに移行済み）
       setLocalEmployers(prev => prev.filter(emp => emp.id !== employer.id));
-      
-      // デバッグログ（保存後の状態）
-      console.log('Employer saved successfully:', {
-        originalId: employer.id,
-        savedEmployer: savedEmployer
-      });
     } catch (error) {
       console.error('Failed to save employer:', error);
       throw new Error(
@@ -165,15 +151,7 @@ export default function OnboardingPage() {
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
   
   // 全ての雇用者（ローカル + 保存済み）を取得（useMemoで最適化）
-  const allEmployers = useMemo(() => {
-    const combined = [...(employers || []), ...localEmployers];
-    console.log('allEmployers calculation:', {
-      profileEmployers: employers, // 直接employersを参照
-      localEmployers: localEmployers,
-      combined: combined
-    });
-    return combined;
-  }, [employers, localEmployers]); // 依存配列も修正
+  const allEmployers = useMemo(() => [...(employers || []), ...localEmployers], [employers, localEmployers]);
   const isStep3Complete = allEmployers.length > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
