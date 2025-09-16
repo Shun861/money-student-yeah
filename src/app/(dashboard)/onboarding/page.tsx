@@ -32,6 +32,7 @@ import { helpContent } from "@/constants/helpContent";
 export default function OnboardingPage() {
   const profile = useAppStore((s) => s.profile);
   const setProfile = useAppStore((s) => s.setProfile);
+  const employers = useAppStore((s) => s.employers); // 直接employersを取得
   const addEmployer = useAppStore((s) => s.addEmployer);
   const removeEmployer = useAppStore((s) => s.removeEmployer);
   const updateEmployer = useAppStore((s) => s.updateEmployer);
@@ -105,7 +106,7 @@ export default function OnboardingPage() {
     // ローカル状態から削除
     setLocalEmployers(prev => prev.filter(emp => emp.id !== id));
     // 既に保存済みの場合はstoreからも削除
-    const existingEmployer = profile.employers?.find(emp => emp.id === id);
+    const existingEmployer = employers?.find(emp => emp.id === id);
     if (existingEmployer) {
       removeEmployer(id);
     }
@@ -134,7 +135,7 @@ export default function OnboardingPage() {
         originalId: employer.id,
         savedEmployer: savedEmployer,
         currentLocalEmployers: localEmployers,
-        currentProfileEmployers: profile.employers
+        currentProfileEmployers: employers
       });
       
       // 成功時はローカルから削除（storeに移行済み）
@@ -165,14 +166,14 @@ export default function OnboardingPage() {
   
   // 全ての雇用者（ローカル + 保存済み）を取得（useMemoで最適化）
   const allEmployers = useMemo(() => {
-    const combined = [...(profile.employers || []), ...localEmployers];
+    const combined = [...(employers || []), ...localEmployers];
     console.log('allEmployers calculation:', {
-      profileEmployers: profile.employers,
+      profileEmployers: employers, // 直接employersを参照
       localEmployers: localEmployers,
       combined: combined
     });
     return combined;
-  }, [profile.employers, localEmployers]);
+  }, [employers, localEmployers]); // 依存配列も修正
   const isStep3Complete = allEmployers.length > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
