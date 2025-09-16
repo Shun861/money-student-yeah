@@ -125,8 +125,9 @@ export default function OnboardingPage() {
 
     setSavingEmployers(prev => new Set(prev).add(employer.id));
     try {
-      // API経由で保存
-      const savedEmployer = await addEmployer(employer);
+      // ローカル雇用者からidを除いてAPI呼び出し（新しいIDが割り当てられる）
+      const { id, ...employerData } = employer;
+      const savedEmployer = await addEmployer(employerData);
       
       // デバッグログ（保存前の状態）
       console.log('Before removing from local:', {
