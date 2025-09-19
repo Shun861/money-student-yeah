@@ -60,6 +60,7 @@ export function BFCacheProtection() {
       };
     }
 
+    // ドキュメントが存在しない場合のクリーンアップ
     return () => {
       window.removeEventListener('pageshow', handlePageShow);
       window.removeEventListener('beforeunload', handleBeforeUnload);

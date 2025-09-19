@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabaseServer';
+import { ACCOUNT_DELETION } from '@/constants/accountDeletion';
 
 interface DeleteAccountRequest {
   password: string;
@@ -21,7 +22,7 @@ interface DeleteAccountResponse {
  * 
  * セキュリティ要件:
  * - パスワード認証による本人確認
- * - "DELETE"文字列による誤操作防止
+ * - "アカウントを削除"文字列による誤操作防止
  * - トランザクション保証
  * - 監査ログ記録
  * - レート制限対応
@@ -69,9 +70,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<DeleteA
       }, { status: 400 });
     }
 
-    if (confirmationText !== "DELETE") {
+    if (confirmationText !== ACCOUNT_DELETION.CONFIRMATION_TEXT) {
       return NextResponse.json({ 
-        error: "確認のため「DELETE」と正確に入力してください。" 
+        error: ACCOUNT_DELETION.CONFIRMATION_ERROR 
       }, { status: 400 });
     }
 

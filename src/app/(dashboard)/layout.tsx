@@ -134,7 +134,7 @@ export default function DashboardLayout({
     }
     
     // 成功時はより確実なリダイレクト方法を使用
-    window.location.href = '/login';
+    router.push('/login');
   };
 
   return (

@@ -16,6 +16,7 @@ import {
 import { getSupabaseClient } from '@/lib/supabaseClient';
 import { useAppStore } from '@/lib/store';
 import { useToastContext } from '@/components/ToastProvider';
+import { ACCOUNT_DELETION } from '@/constants/accountDeletion';
 
 // アカウント削除の状態管理
 interface DeleteAccountState {
@@ -86,7 +87,7 @@ export default function SettingsPage() {
       // 成功時: トースト表示 + ログインページにリダイレクト
       showSuccess(
         'アカウント削除完了', 
-        'アカウントが正常に削除されました。ご利用ありがとうございました。',
+        ACCOUNT_DELETION.SUCCESS_MESSAGE,
         3000
       );
       
@@ -320,7 +321,7 @@ interface DeleteAccountFormProps {
 }
 
 function DeleteAccountForm({ state, setState, onConfirm, onCancel }: DeleteAccountFormProps) {
-  const isStep2Valid = state.password.length >= 6 && state.confirmationText === "DELETE";
+  const isStep2Valid = state.password.length >= 6 && state.confirmationText === ACCOUNT_DELETION.CONFIRMATION_TEXT;
   
   return (
     <div className="space-y-4 border-t border-red-200 pt-4">
@@ -398,11 +399,11 @@ function DeleteAccountForm({ state, setState, onConfirm, onCancel }: DeleteAccou
               value={state.confirmationText}
               onChange={(e) => setState(prev => ({ ...prev, confirmationText: e.target.value }))}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              placeholder="DELETE"
+              placeholder={ACCOUNT_DELETION.CONFIRMATION_PLACEHOLDER}
               disabled={state.isDeleting}
             />
             <p className="text-xs text-gray-500 mt-1">
-              誤操作防止のため「<strong>DELETE</strong>」と正確に入力してください
+              誤操作防止のため「<strong>{ACCOUNT_DELETION.CONFIRMATION_TEXT}</strong>」と正確に入力してください
             </p>
           </div>
           
