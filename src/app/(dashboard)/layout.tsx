@@ -134,7 +134,7 @@ export default function DashboardLayout({
     }
     
     // 成功時はより確実なリダイレクト方法を使用
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (
