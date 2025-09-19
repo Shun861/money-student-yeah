@@ -3,6 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { getSupabaseClient } from "@/lib/supabaseClient";
+import { useToastContext } from "@/components/ToastProvider";
 import { 
   HomeIcon, 
   ClockIcon, 
@@ -10,7 +12,8 @@ import {
   Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon,
-  CurrencyYenIcon
+  CurrencyYenIcon,
+  ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
 
 // 学生目線でのシンプルなナビゲーション
@@ -27,7 +30,37 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { showError } = useToastContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // トーストでエラーメッセージを表示
+      showError(
+        'ログアウトエラー', 
+        'ログアウトに失敗しました。再度お試しください。'
+      );
+      setIsLoggingOut(false);
+      return;
+    }
+    
+    // 成功時はより確実なリダイレクト方法を使用
+    window.location.href = '/login';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,12 +128,27 @@ export default function DashboardLayout({
                 <p className="font-medium text-gray-900">ユーザー</p>
                 <p className="text-xs text-gray-500">学生</p>
               </div>
-              <Link
-                href="/settings"
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <Cog6ToothIcon className="h-4 w-4" />
-              </Link>
+              
+              {/* アクションボタン */}
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/settings"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="設定"
+                >
+                  <Cog6ToothIcon className="h-4 w-4" />
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                  title={isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+                  aria-label={isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+                  aria-disabled={isLoggingOut}
+                >
+                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
