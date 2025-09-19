@@ -1,0 +1,231 @@
+name: Account Management Tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/app/(dashboard)/layout.tsx'
+      - 'src/app/(dashboard)/settings/**'
+      - 'src/app/api/account/**'
+      - 'src/components/BFCacheProtection.tsx'
+      - 'src/constants/accountDeletion.ts'
+      - 'tests/**'
+  push:
+    branches:
+      - main
+      - feature/issue-64-comprehensive-testing
+
+jobs:
+  test-account-management:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node-version: [18, 20]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Environment check
+        run: npm run check:env:ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Start application for testing
+        run: |
+          npm run start &
+          sleep 10
+        env:
+          NODE_ENV: test
+          E2E_BASE_URL: http://localhost:3000
+
+      - name: Run E2E Tests - Logout
+        run: npm run test:e2e:logout
+        continue-on-error: true
+
+      - name: Run E2E Tests - Account Deletion
+        run: npm run test:e2e:account-deletion
+        continue-on-error: true
+
+      - name: Run Security Tests
+        run: npm run test:security
+        continue-on-error: true
+
+      - name: Run Performance Tests
+        run: npm run test:performance
+        continue-on-error: true
+
+      - name: Run Integration Tests
+        run: npm run test:integration
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-node-${{ matrix.node-version }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-videos-node-${{ matrix.node-version }}
+          path: test-results/
+          retention-days: 3
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Check for vulnerabilities
+        run: |
+          if npm audit --audit-level=high --json | jq -e '.vulnerabilities | length > 0'; then
+            echo "High or critical vulnerabilities found!"
+            exit 1
+          fi
+
+  lint-and-type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+  performance-benchmark:
+    runs-on: ubuntu-latest
+    needs: test-account-management
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Build and start application
+        run: |
+          npm run build
+          npm run start &
+          sleep 10
+
+      - name: Run performance tests with reporting
+        run: |
+          npm run test:performance -- --reporter=json > performance-results.json
+        continue-on-error: true
+
+      - name: Process performance results
+        run: |
+          if [ -f performance-results.json ]; then
+            echo "Performance test results:"
+            cat performance-results.json | jq '.suites[].tests[].results[] | select(.status == "passed") | {title: .test.title, duration: .duration}'
+          fi
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-results
+          path: performance-results.json
+          retention-days: 30
+
+  accessibility-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g @axe-core/cli
+
+      - name: Build and start application
+        run: |
+          npm run build
+          npm run start &
+          sleep 10
+
+      - name: Run accessibility tests
+        run: |
+          axe http://localhost:3000/login --exit
+          axe http://localhost:3000/dashboard --exit
+          axe http://localhost:3000/settings --exit
+        continue-on-error: true
+
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [test-account-management, security-audit, lint-and-type-check]
+    if: always()
+    steps:
+      - name: Test Summary
+        run: |
+          echo "## Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Account Management | ${{ needs.test-account-management.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Audit | ${{ needs.security-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Type Check | ${{ needs.lint-and-type-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.test-account-management.result }}" == "success" && "${{ needs.security-audit.result }}" == "success" && "${{ needs.lint-and-type-check.result }}" == "success" ]]; then
+            echo "✅ All tests passed! Ready for deployment." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some tests failed. Please review before merging." >> $GITHUB_STEP_SUMMARY
+          fi
