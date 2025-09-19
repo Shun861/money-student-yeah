@@ -83,7 +83,7 @@ export default function SettingsPage() {
         throw new Error(data.error || 'アカウント削除に失敗しました');
       }
 
-      // 成功時: トースト表示 + ホームページにリダイレクト
+      // 成功時: トースト表示 + ログインページにリダイレクト
       showSuccess(
         'アカウント削除完了', 
         'アカウントが正常に削除されました。ご利用ありがとうございました。',
@@ -92,7 +92,7 @@ export default function SettingsPage() {
       
       // 少し遅延してリダイレクト（トーストを見せるため）
       setTimeout(() => {
-        router.push('/');
+        router.push('/login');
       }, 1500);
       
     } catch (error) {
