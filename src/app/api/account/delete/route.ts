@@ -69,9 +69,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<DeleteA
       }, { status: 400 });
     }
 
-    if (confirmationText !== "DELETE") {
+    if (confirmationText !== "アカウントを削除") {
       return NextResponse.json({ 
-        error: "確認のため「DELETE」と正確に入力してください。" 
+        error: "確認のため「アカウントを削除」と正確に入力してください。" 
       }, { status: 400 });
     }
 
@@ -191,7 +191,7 @@ export async function OPTIONS() {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
-        ? 'https://your-domain.com' 
+        ? (process.env.NEXT_PUBLIC_CORS_ORIGIN || '') 
         : '*',
       'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',

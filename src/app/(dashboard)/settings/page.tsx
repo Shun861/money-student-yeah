@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabaseClient';
 import { useAppStore } from '@/lib/store';
+import { useToastContext } from '@/components/ToastProvider';
 
 // アカウント削除の状態管理
 interface DeleteAccountState {
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const { profile } = useAppStore();
   const router = useRouter();
+  const { showSuccess, showError } = useToastContext();
   
   // アカウント削除の状態管理
   const [deleteState, setDeleteState] = useState<DeleteAccountState>({
@@ -81,15 +83,26 @@ export default function SettingsPage() {
         throw new Error(data.error || 'アカウント削除に失敗しました');
       }
 
-      // 成功時: ホームページにリダイレクト
-      alert('アカウントが正常に削除されました。ご利用ありがとうございました。');
-      window.location.href = '/';
+      // 成功時: トースト表示 + ホームページにリダイレクト
+      showSuccess(
+        'アカウント削除完了', 
+        'アカウントが正常に削除されました。ご利用ありがとうございました。',
+        3000
+      );
+      
+      // 少し遅延してリダイレクト（トーストを見せるため）
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
       
     } catch (error) {
       console.error('Account deletion error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'アカウント削除に失敗しました';
+      
+      showError('削除エラー', errorMessage);
       setDeleteState(prev => ({ 
         ...prev, 
-        error: error instanceof Error ? error.message : 'アカウント削除に失敗しました'
+        error: errorMessage
       }));
     } finally {
       setDeleteState(prev => ({ ...prev, isDeleting: false }));
