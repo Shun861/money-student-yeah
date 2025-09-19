@@ -46,6 +46,9 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
+  // バリデーションエラー状態
+  const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
+  
   // ローカル雇用者管理（オンボーディング専用）
   const [localEmployers, setLocalEmployers] = useState<Employer[]>([]);
   const [savingEmployers, setSavingEmployers] = useState<Set<string>>(new Set());
@@ -155,18 +158,51 @@ export default function OnboardingPage() {
   const isStep3Complete = allEmployers.length > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
-    if (!isStep3Complete || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
+    setValidationErrors(new Set());
+    
     try {
-      // 未保存のローカル雇用者を先に保存
-      const validLocalEmployers = localEmployers.filter(emp => emp.name?.trim());
-      const invalidLocalEmployers = localEmployers.filter(emp => !emp.name?.trim());
+      // バリデーション: 必須項目チェック
+      const errors = new Set<string>();
       
-      // バリデーションエラーがある場合は事前に通知
-      if (invalidLocalEmployers.length > 0) {
-        throw new Error(`${invalidLocalEmployers.length}件の勤務先に名前が入力されていません。すべての勤務先に名前を入力してください。`);
+      // 勤務先がない場合
+      if (allEmployers.length === 0) {
+        errors.add('no-employers');
       }
+      
+      // 利用規約に同意していない場合
+      if (!profile.termsAccepted) {
+        errors.add('terms-not-accepted');
+      }
+      
+      // 未入力の勤務先名チェック
+      const invalidLocalEmployers = localEmployers.filter(emp => !emp.name?.trim());
+      invalidLocalEmployers.forEach(emp => {
+        errors.add(`employer-name-${emp.id}`);
+      });
+      
+      // エラーがある場合は強調表示して処理を停止
+      if (errors.size > 0) {
+        setValidationErrors(errors);
+        
+        // エラーメッセージを作成
+        const messages = [];
+        if (errors.has('no-employers')) {
+          messages.push('勤務先を追加してください');
+        }
+        if (errors.has('terms-not-accepted')) {
+          messages.push('利用規約に同意してください');
+        }
+        if (invalidLocalEmployers.length > 0) {
+          messages.push(`${invalidLocalEmployers.length}件の勤務先に名前を入力してください`);
+        }
+        
+        throw new Error(messages.join('、'));
+      }
+      
+      // 未保存のローカル雇用者を自動保存
+      const validLocalEmployers = localEmployers.filter(emp => emp.name?.trim());
       
       // 一括保存の実行（Promise.allSettledで部分的失敗に対応）
       if (validLocalEmployers.length > 0) {
@@ -417,9 +453,20 @@ export default function OnboardingPage() {
               </div>
               
               {allEmployers.length === 0 ? (
-                <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                  <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">勤務先を追加してください</p>
+                <div className={`text-center py-8 border-2 border-dashed rounded-lg ${
+                  validationErrors.has('no-employers')
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300'
+                }`}>
+                  <CurrencyYenIcon className={`w-12 h-12 mx-auto mb-3 ${
+                    validationErrors.has('no-employers') ? 'text-red-400' : 'text-gray-400'
+                  }`} />
+                  <p className={validationErrors.has('no-employers') ? 'text-red-600' : 'text-gray-500'}>
+                    勤務先を追加してください
+                  </p>
+                  {validationErrors.has('no-employers') && (
+                    <p className="text-red-500 text-sm mt-1">完了するには少なくとも1つの勤務先が必要です</p>
+                  )}
                 </div>
               ) : (
                 <div className="grid gap-4">
@@ -470,10 +517,21 @@ export default function OnboardingPage() {
                           </label>
                           <input
                             type="text"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                            className={`w-full border rounded-lg px-3 py-2 ${
+                              validationErrors.has(`employer-name-${employer.id}`)
+                                ? 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500'
+                                : 'border-gray-300'
+                            }`}
                             placeholder="例: コンビニエンスストア"
                             value={employer.name}
                             onChange={(e) => {
+                              // 入力時にエラーをクリア
+                              if (validationErrors.has(`employer-name-${employer.id}`)) {
+                                const newErrors = new Set(validationErrors);
+                                newErrors.delete(`employer-name-${employer.id}`);
+                                setValidationErrors(newErrors);
+                              }
+                              
                               if (isLocal) {
                                 updateLocalEmployer(employer.id, { name: e.target.value });
                               } else {
@@ -481,6 +539,9 @@ export default function OnboardingPage() {
                               }
                             }}
                           />
+                          {validationErrors.has(`employer-name-${employer.id}`) && (
+                            <p className="text-red-500 text-xs mt-1">勤務先名を入力してください</p>
+                          )}
                         </div>
                         
                         <div>
@@ -616,13 +677,23 @@ export default function OnboardingPage() {
             </div>
 
             {/* 利用規約同意 */}
-            <div className="border-t pt-6 mt-6">
+            <div className={`border-t pt-6 mt-6 ${
+              validationErrors.has('terms-not-accepted') ? 'bg-red-50 border-red-300 -mx-6 px-6 rounded-lg' : ''
+            }`}>
               <div className="flex items-start gap-3">
                 <input
                   type="checkbox"
                   id="termsAccepted"
                   checked={profile.termsAccepted || false}
-                  onChange={(e) => setProfile({ termsAccepted: e.target.checked })}
+                  onChange={(e) => {
+                    // チェック時にエラーをクリア
+                    if (e.target.checked && validationErrors.has('terms-not-accepted')) {
+                      const newErrors = new Set(validationErrors);
+                      newErrors.delete('terms-not-accepted');
+                      setValidationErrors(newErrors);
+                    }
+                    setProfile({ termsAccepted: e.target.checked });
+                  }}
                   className="mt-1"
                   required
                 />
@@ -630,6 +701,9 @@ export default function OnboardingPage() {
                   <label htmlFor="termsAccepted" className="text-sm font-medium text-gray-700">
                     利用規約とプライバシーポリシーに同意します <span className="text-red-500">*</span>
                   </label>
+                  {validationErrors.has('terms-not-accepted') && (
+                    <p className="text-red-500 text-xs mt-1">利用規約に同意してください</p>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
                     <Link href="/terms" className="text-blue-600 hover:text-blue-800" target="_blank">
                       利用規約
@@ -682,6 +756,7 @@ export default function OnboardingPage() {
         {submitError && (
           <p className="text-sm text-red-600 mr-auto">{submitError}</p>
         )}
+        
         {currentStep < 3 ? (
           <button
             onClick={handleNext}
@@ -697,7 +772,7 @@ export default function OnboardingPage() {
         ) : (
           <button
             onClick={completeOnboarding}
-            disabled={!isStep3Complete || submitting}
+            disabled={submitting}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? '保存中…' : '完了'}

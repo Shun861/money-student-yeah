@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { BFCacheProtection } from "@/components/BFCacheProtection";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useToastContext } from "@/components/ToastProvider";
 import { 
@@ -30,9 +31,83 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { showError } = useToastContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // 認証チェック（ブラウザバック対策）
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          // 認証されていない場合はログインページにリダイレクト
+          router.replace('/login');
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+        return;
+      }
+      
+      setIsCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, [router]);
+
+  // 認証状態の変更を監視
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        // ログアウトまたはセッション失効時はログインページにリダイレクト
+        router.replace('/login');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  // ページの可視性変更を監視（ブラウザバック時の再チェック）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isCheckingAuth) {
+        // ページが表示されたときに認証を再チェック
+        const supabase = getSupabaseClient();
+        supabase.auth.getUser().then(({ data: { user }, error }) => {
+          if (error || !user) {
+            router.replace('/login');
+          }
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [router, isCheckingAuth]);
+
+  // 認証チェック中は読み込み画面を表示
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">認証確認中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -59,11 +134,13 @@ export default function DashboardLayout({
     }
     
     // 成功時はより確実なリダイレクト方法を使用
-    window.location.href = '/login';
+    router.replace('/login');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <BFCacheProtection />
+      <div className="min-h-screen bg-gray-50">
       {/* オーバーレイ - 完全に透明 */}
       {sidebarOpen && (
         <div 
@@ -184,5 +261,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+    </>
   );
 }

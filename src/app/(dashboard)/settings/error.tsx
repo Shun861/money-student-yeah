@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 export default function SettingsError({
@@ -9,6 +10,8 @@ export default function SettingsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
   useEffect(() => {
     console.error('Settings page error:', error);
   }, [error]);
@@ -31,7 +34,7 @@ export default function SettingsError({
             再試行
           </button>
           <button
-            onClick={() => window.location.href = '/dashboard'}
+            onClick={() => router.push('/dashboard')}
             className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
           >
             ダッシュボードに戻る

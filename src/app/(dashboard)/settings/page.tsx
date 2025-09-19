@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { 
   UserIcon,
@@ -9,15 +10,40 @@ import {
   ExclamationTriangleIcon,
   EnvelopeIcon,
   KeyIcon,
-  ClockIcon
+  ClockIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { getSupabaseClient } from '@/lib/supabaseClient';
 import { useAppStore } from '@/lib/store';
+import { useToastContext } from '@/components/ToastProvider';
+import { ACCOUNT_DELETION } from '@/constants/accountDeletion';
+
+// アカウント削除の状態管理
+interface DeleteAccountState {
+  isOpen: boolean;
+  step: 1 | 2 | 3; // 1: 警告, 2: 確認入力, 3: 最終確認
+  password: string;
+  confirmationText: string;
+  isDeleting: boolean;
+  error: string | null;
+}
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { profile } = useAppStore();
+  const router = useRouter();
+  const { showSuccess, showError } = useToastContext();
+  
+  // アカウント削除の状態管理
+  const [deleteState, setDeleteState] = useState<DeleteAccountState>({
+    isOpen: false,
+    step: 1,
+    password: '',
+    confirmationText: '',
+    isDeleting: false,
+    error: null
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -35,6 +61,66 @@ export default function SettingsPage() {
     
     fetchUser();
   }, []);
+
+  // アカウント削除処理
+  const handleDeleteAccount = async () => {
+    setDeleteState(prev => ({ ...prev, isDeleting: true, error: null }));
+    
+    try {
+      const response = await fetch('/api/account/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          password: deleteState.password,
+          confirmationText: deleteState.confirmationText
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'アカウント削除に失敗しました');
+      }
+
+      // 成功時: トースト表示 + ログインページにリダイレクト
+      showSuccess(
+        'アカウント削除完了', 
+        ACCOUNT_DELETION.SUCCESS_MESSAGE,
+        3000
+      );
+      
+      // 少し遅延してリダイレクト（トーストを見せるため）
+      setTimeout(() => {
+        router.push('/login');
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'アカウント削除に失敗しました';
+      
+      showError('削除エラー', errorMessage);
+      setDeleteState(prev => ({ 
+        ...prev, 
+        error: errorMessage
+      }));
+    } finally {
+      setDeleteState(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  // 削除状態のリセット
+  const resetDeleteState = () => {
+    setDeleteState({
+      isOpen: false,
+      step: 1,
+      password: '',
+      confirmationText: '',
+      isDeleting: false,
+      error: null
+    });
+  };
 
   if (loading) {
     return (
@@ -202,19 +288,195 @@ export default function SettingsPage() {
                 <li>• プロフィール情報が削除されます</li>
                 <li>• このアクションは元に戻せません</li>
               </ul>
-              <button 
-                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium opacity-50 cursor-not-allowed"
-                disabled
-              >
-                アカウントを削除（準備中）
-              </button>
-              <p className="text-xs text-red-600 mt-2">
-                ※ アカウント削除機能は次のフェーズで利用可能になります
-              </p>
+              
+              {!deleteState.isOpen ? (
+                <button 
+                  onClick={() => setDeleteState(prev => ({ ...prev, isOpen: true }))}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                >
+                  アカウントを削除
+                </button>
+              ) : (
+                <DeleteAccountForm 
+                  state={deleteState}
+                  setState={setDeleteState}
+                  onConfirm={handleDeleteAccount}
+                  onCancel={resetDeleteState}
+                />
+              )}
             </div>
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+// アカウント削除フォームコンポーネント
+interface DeleteAccountFormProps {
+  state: DeleteAccountState;
+  setState: React.Dispatch<React.SetStateAction<DeleteAccountState>>;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function DeleteAccountForm({ state, setState, onConfirm, onCancel }: DeleteAccountFormProps) {
+  const isStep2Valid = state.password.length >= 6 && state.confirmationText === ACCOUNT_DELETION.CONFIRMATION_TEXT;
+  
+  return (
+    <div className="space-y-4 border-t border-red-200 pt-4">
+      {/* エラー表示 */}
+      {state.error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="flex items-center gap-2">
+            <ExclamationTriangleIcon className="h-5 w-5" />
+            <span className="text-sm">{state.error}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* ステップ1: 警告確認 */}
+      {state.step === 1 && (
+        <div>
+          <div className="bg-red-100 border border-red-300 rounded-lg p-4 mb-4">
+            <h4 className="font-medium text-red-900 mb-2">⚠️ 最終警告</h4>
+            <p className="text-sm text-red-800 mb-3">
+              この操作によりアカウントとすべてのデータが永久に削除されます。
+            </p>
+            <ul className="text-sm text-red-800 space-y-1">
+              <li>• 収入記録、勤務データが完全削除</li>
+              <li>• プロフィール情報が完全削除</li>
+              <li>• 雇用者情報が完全削除</li>
+              <li>• 復元は一切不可能</li>
+            </ul>
+          </div>
+          
+          <p className="text-sm text-gray-600 mb-4">
+            上記のリスクを理解し、本当にアカウントを削除する場合のみ続行してください。
+          </p>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={() => setState(prev => ({ ...prev, step: 2 }))}
+              className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 transition-colors"
+            >
+              理解しました - 続行
+            </button>
+            <button
+              onClick={onCancel}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400 transition-colors"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* ステップ2: 認証情報入力 */}
+      {state.step === 2 && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              現在のパスワード <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              value={state.password}
+              onChange={(e) => setState(prev => ({ ...prev, password: e.target.value }))}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              placeholder="パスワードを入力してください"
+              disabled={state.isDeleting}
+            />
+            <p className="text-xs text-gray-500 mt-1">本人確認のため現在のパスワードが必要です</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              確認文字列 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={state.confirmationText}
+              onChange={(e) => setState(prev => ({ ...prev, confirmationText: e.target.value }))}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              placeholder={ACCOUNT_DELETION.CONFIRMATION_PLACEHOLDER}
+              disabled={state.isDeleting}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              誤操作防止のため「<strong>{ACCOUNT_DELETION.CONFIRMATION_TEXT}</strong>」と正確に入力してください
+            </p>
+          </div>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={() => setState(prev => ({ ...prev, step: 3 }))}
+              disabled={!isStep2Valid || state.isDeleting}
+              className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              最終確認へ
+            </button>
+            <button
+              onClick={() => setState(prev => ({ ...prev, step: 1 }))}
+              disabled={state.isDeleting}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400 disabled:opacity-50 transition-colors"
+            >
+              戻る
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* ステップ3: 最終確認 */}
+      {state.step === 3 && (
+        <div className="bg-red-50 border border-red-200 rounded p-4">
+          <div className="flex items-start gap-3">
+            <ExclamationTriangleIcon className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-medium text-red-900 mb-2">最終確認</h4>
+              <p className="text-sm text-red-800 mb-4">
+                本当にアカウントを削除しますか？この操作は<strong>絶対に取り消せません</strong>。
+              </p>
+              
+              <div className="bg-white border border-red-200 rounded p-3 mb-4">
+                <p className="text-xs text-gray-600 font-mono">
+                  実行予定の操作: 全データ削除 → 認証ユーザー削除 → ログアウト
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={onConfirm}
+                  disabled={state.isDeleting}
+                  className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {state.isDeleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      削除中...
+                    </>
+                  ) : (
+                    'アカウントを削除'
+                  )}
+                </button>
+                <button
+                  onClick={() => setState(prev => ({ ...prev, step: 2 }))}
+                  disabled={state.isDeleting}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400 disabled:opacity-50 transition-colors"
+                >
+                  戻る
+                </button>
+                <button
+                  onClick={onCancel}
+                  disabled={state.isDeleting}
+                  className="text-gray-500 hover:text-gray-700 px-2 py-2 text-sm transition-colors"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
