@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { getSupabaseClient } from "@/lib/supabaseClient";
+import { useToastContext } from "@/components/ToastProvider";
 import { 
   HomeIcon, 
   ClockIcon, 
@@ -29,6 +30,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { showError } = useToastContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -45,13 +48,16 @@ export default function DashboardLayout({
         throw error;
       }
       
-      // 成功時はリダイレクト（middlewareが自動的にログインページに転送）
-      window.location.href = '/login';
+      // 成功時はNext.jsルーターを使用してナビゲーション
+      router.push('/login');
       
     } catch (error) {
       console.error('Logout failed:', error);
-      // エラーメッセージの表示
-      alert('ログアウトに失敗しました。再度お試しください。');
+      // トーストでエラーメッセージを表示
+      showError(
+        'ログアウトエラー', 
+        'ログアウトに失敗しました。再度お試しください。'
+      );
     } finally {
       setIsLoggingOut(false);
     }
