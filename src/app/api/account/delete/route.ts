@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabaseServer';
 
 interface DeleteAccountRequest {
   password: string;
@@ -69,9 +69,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<DeleteA
       }, { status: 400 });
     }
 
-    if (confirmationText !== "DELETE") {
+    if (confirmationText !== "アカウントを削除") {
       return NextResponse.json({ 
-        error: "確認のため「DELETE」と正確に入力してください。" 
+        error: "確認のため「アカウントを削除」と正確に入力してください。" 
       }, { status: 400 });
     }
 
@@ -111,7 +111,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<DeleteA
     });
 
     // 7. 関連データ削除（データベース関数を使用してトランザクション保証）
-    const { data: deletionResult, error: deleteError } = await supabase
+    // Service Role権限でデータベース関数を実行
+    const supabaseService = createSupabaseServiceClient();
+    const { data: deletionResult, error: deleteError } = await supabaseService
       .rpc('delete_user_account', {
         target_user_id: user.id
       });
@@ -130,7 +132,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<DeleteA
     }
 
     // 8. Supabase Auth ユーザー削除
-    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id);
+    const { error: authDeleteError } = await supabaseService.auth.admin.deleteUser(user.id);
     
     if (authDeleteError) {
       console.error('Failed to delete auth user (data already deleted):', {
