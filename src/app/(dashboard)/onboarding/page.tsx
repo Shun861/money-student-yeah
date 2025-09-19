@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { getSupabaseClient } from "@/lib/supabaseClient";
@@ -32,6 +32,7 @@ import { helpContent } from "@/constants/helpContent";
 export default function OnboardingPage() {
   const profile = useAppStore((s) => s.profile);
   const setProfile = useAppStore((s) => s.setProfile);
+  const employers = useAppStore((s) => s.employers); // 直接employersを取得
   const addEmployer = useAppStore((s) => s.addEmployer);
   const removeEmployer = useAppStore((s) => s.removeEmployer);
   const updateEmployer = useAppStore((s) => s.updateEmployer);
@@ -44,6 +45,10 @@ export default function OnboardingPage() {
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  
+  // ローカル雇用者管理（オンボーディング専用）
+  const [localEmployers, setLocalEmployers] = useState<Employer[]>([]);
+  const [savingEmployers, setSavingEmployers] = useState<Set<string>>(new Set());
 
   // 同居状況の変更を監視
   useEffect(() => {
@@ -93,22 +98,92 @@ export default function OnboardingPage() {
       bonus: 0,
       employerSize: "unknown"
     };
-    addEmployer(newEmployer);
+    // ローカル状態のみに追加（API呼び出しなし）
+    setLocalEmployers(prev => [...prev, newEmployer]);
   };
 
   const removeEmployerById = (id: string) => {
-    removeEmployer(id);
+    // ローカル状態から削除
+    setLocalEmployers(prev => prev.filter(emp => emp.id !== id));
+    // 既に保存済みの場合はstoreからも削除
+    const existingEmployer = employers?.find(emp => emp.id === id);
+    if (existingEmployer) {
+      removeEmployer(id);
+    }
+  };
+
+  const updateLocalEmployer = (id: string, updates: Partial<Employer>) => {
+    setLocalEmployers(prev => 
+      prev.map(emp => emp.id === id ? { ...emp, ...updates } : emp)
+    );
+  };
+
+  const saveEmployer = async (employer: Employer) => {
+    // 必須項目のバリデーション
+    if (!employer.name?.trim()) {
+      throw new Error('勤務先名は必須です');
+    }
+
+    setSavingEmployers(prev => new Set(prev).add(employer.id));
+    try {
+      // ローカル雇用者からidを除いてAPI呼び出し（新しいIDが割り当てられる）
+      const { id, ...employerData } = employer;
+      const savedEmployer = await addEmployer(employerData);
+      
+      // 成功時はローカルから削除（storeに移行済み）
+      setLocalEmployers(prev => prev.filter(emp => emp.id !== employer.id));
+    } catch (error) {
+      console.error('Failed to save employer:', error);
+      throw new Error(
+        `Failed to save employer "${employer.name ?? employer.id ?? 'unknown'}": ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error }
+      );
+    } finally {
+      setSavingEmployers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(employer.id);
+        return newSet;
+      });
+    }
   };
 
   const isStep1Complete = profile.birthDate && profile.studentType && profile.residenceCity;
   const isStep2Complete = profile.insuranceStatus && profile.parentInsuranceType && profile.livingStatus;
-  const isStep3Complete = (profile.employers?.length ?? 0) > 0 && profile.termsAccepted;
+  
+  // 全ての雇用者（ローカル + 保存済み）を取得（useMemoで最適化）
+  const allEmployers = useMemo(() => [...(employers || []), ...localEmployers], [employers, localEmployers]);
+  const isStep3Complete = allEmployers.length > 0 && profile.termsAccepted;
 
   const completeOnboarding = async () => {
     if (!isStep3Complete || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
+      // 未保存のローカル雇用者を先に保存
+      const validLocalEmployers = localEmployers.filter(emp => emp.name?.trim());
+      const invalidLocalEmployers = localEmployers.filter(emp => !emp.name?.trim());
+      
+      // バリデーションエラーがある場合は事前に通知
+      if (invalidLocalEmployers.length > 0) {
+        throw new Error(`${invalidLocalEmployers.length}件の勤務先に名前が入力されていません。すべての勤務先に名前を入力してください。`);
+      }
+      
+      // 一括保存の実行（Promise.allSettledで部分的失敗に対応）
+      if (validLocalEmployers.length > 0) {
+        const saveResults = await Promise.allSettled(
+          validLocalEmployers.map(employer => saveEmployer(employer))
+        );
+        
+        const failedSaves = saveResults
+          .map((result, index) => ({ result, employer: validLocalEmployers[index] }))
+          .filter(({ result }) => result.status === 'rejected');
+        
+        if (failedSaves.length > 0) {
+          const failedNames = failedSaves.map(({ employer }) => employer.name || employer.id).join(', ');
+          throw new Error(`以下の勤務先の保存に失敗しました: ${failedNames}。再度お試しください。`);
+        }
+      }
+
       // 現在のユーザーを取得
       const supabase = getSupabaseClient();
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -341,24 +416,52 @@ export default function OnboardingPage() {
                 </button>
               </div>
               
-              {(profile.employers?.length ?? 0) === 0 ? (
+              {allEmployers.length === 0 ? (
                 <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                   <CurrencyYenIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500">勤務先を追加してください</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {profile.employers?.map((employer, index) => (
-                    <div key={employer.id} className="border rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium">勤務先 {index + 1}</h4>
-                        <button
-                          onClick={() => removeEmployerById(employer.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </div>
+                  {allEmployers.map((employer, index) => {
+                    const isLocal = localEmployers.some(emp => emp.id === employer.id);
+                    const isSaving = savingEmployers.has(employer.id);
+                    const canSave = isLocal && employer.name?.trim();
+                    
+                    return (
+                      <div key={employer.id} className="border rounded-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">勤務先 {index + 1}</h4>
+                            {isLocal && (
+                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                未保存
+                              </span>
+                            )}
+                            {isSaving && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                保存中...
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isLocal && canSave && !isSaving && (
+                              <button
+                                onClick={() => saveEmployer(employer)}
+                                className="text-blue-500 hover:text-blue-700 text-sm"
+                                disabled={isSaving}
+                              >
+                                保存
+                              </button>
+                            )}
+                            <button
+                              onClick={() => removeEmployerById(employer.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
                       
                       <div className="grid gap-4 md:grid-cols-2">
                         <div>
@@ -370,7 +473,13 @@ export default function OnboardingPage() {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2"
                             placeholder="例: コンビニエンスストア"
                             value={employer.name}
-                            onChange={(e) => updateEmployer(employer.id, { name: e.target.value })}
+                            onChange={(e) => {
+                              if (isLocal) {
+                                updateLocalEmployer(employer.id, { name: e.target.value });
+                              } else {
+                                updateEmployer(employer.id, { name: e.target.value });
+                              }
+                            }}
                           />
                         </div>
                         
@@ -381,7 +490,13 @@ export default function OnboardingPage() {
                           <select
                             className="w-full border border-gray-300 rounded-lg px-3 py-2"
                             value={employer.employerSize}
-                            onChange={(e) => updateEmployer(employer.id, { employerSize: e.target.value as EmployerSize })}
+                            onChange={(e) => {
+                              if (isLocal) {
+                                updateLocalEmployer(employer.id, { employerSize: e.target.value as EmployerSize });
+                              } else {
+                                updateEmployer(employer.id, { employerSize: e.target.value as EmployerSize });
+                              }
+                            }}
                           >
                             {employerSizeOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -400,7 +515,13 @@ export default function OnboardingPage() {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2"
                             placeholder="例: 20"
                             value={employer.weeklyHours}
-                            onChange={(e) => updateEmployer(employer.id, { weeklyHours: Number(e.target.value) })}
+                            onChange={(e) => {
+                              if (isLocal) {
+                                updateLocalEmployer(employer.id, { weeklyHours: Number(e.target.value) });
+                              } else {
+                                updateEmployer(employer.id, { weeklyHours: Number(e.target.value) });
+                              }
+                            }}
                             min={0}
                             step={0.5}
                           />
@@ -415,7 +536,13 @@ export default function OnboardingPage() {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2"
                             placeholder="例: 80000"
                             value={employer.monthlyIncome}
-                            onChange={(e) => updateEmployer(employer.id, { monthlyIncome: Number(e.target.value) })}
+                            onChange={(e) => {
+                              if (isLocal) {
+                                updateLocalEmployer(employer.id, { monthlyIncome: Number(e.target.value) });
+                              } else {
+                                updateEmployer(employer.id, { monthlyIncome: Number(e.target.value) });
+                              }
+                            }}
                             min={0}
                             step={1}
                           />
@@ -430,7 +557,13 @@ export default function OnboardingPage() {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2"
                             placeholder="例: 5000"
                             value={employer.commutingAllowance}
-                            onChange={(e) => updateEmployer(employer.id, { commutingAllowance: Number(e.target.value) })}
+                            onChange={(e) => {
+                              if (isLocal) {
+                                updateLocalEmployer(employer.id, { commutingAllowance: Number(e.target.value) });
+                              } else {
+                                updateEmployer(employer.id, { commutingAllowance: Number(e.target.value) });
+                              }
+                            }}
                             min={0}
                             step={1}
                           />
@@ -445,14 +578,21 @@ export default function OnboardingPage() {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2"
                             placeholder="例: 100000"
                             value={employer.bonus}
-                            onChange={(e) => updateEmployer(employer.id, { bonus: Number(e.target.value) })}
+                            onChange={(e) => {
+                              if (isLocal) {
+                                updateLocalEmployer(employer.id, { bonus: Number(e.target.value) });
+                              } else {
+                                updateEmployer(employer.id, { bonus: Number(e.target.value) });
+                              }
+                            }}
                             min={0}
                             step={1}
                           />
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
