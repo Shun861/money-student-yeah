@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { getSupabaseClient } from "@/lib/supabaseClient";
@@ -30,7 +30,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { showError } = useToastContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -48,9 +47,6 @@ export default function DashboardLayout({
         throw error;
       }
       
-      // 成功時はNext.jsルーターを使用してナビゲーション
-      router.push('/login');
-      
     } catch (error) {
       console.error('Logout failed:', error);
       // トーストでエラーメッセージを表示
@@ -58,9 +54,12 @@ export default function DashboardLayout({
         'ログアウトエラー', 
         'ログアウトに失敗しました。再度お試しください。'
       );
-    } finally {
       setIsLoggingOut(false);
+      return;
     }
+    
+    // 成功時はより確実なリダイレクト方法を使用
+    window.location.href = '/login';
   };
 
   return (
@@ -144,6 +143,8 @@ export default function DashboardLayout({
                   disabled={isLoggingOut}
                   className="text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
                   title={isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+                  aria-label={isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+                  aria-disabled={isLoggingOut}
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4" />
                 </button>
