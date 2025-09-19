@@ -69,9 +69,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse<DeleteA
       }, { status: 400 });
     }
 
-    if (confirmationText !== "アカウントを削除") {
+    if (confirmationText !== "DELETE") {
       return NextResponse.json({ 
-        error: "確認のため「アカウントを削除」と正確に入力してください。" 
+        error: "確認のため「DELETE」と正確に入力してください。" 
       }, { status: 400 });
     }
 
