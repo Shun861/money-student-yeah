@@ -107,18 +107,16 @@ test.describe('Account Deletion API Security', () => {
   });
 
   test('should handle CORS properly', async ({ page }) => {
-    // OPTIONSリクエストのテスト
-    const response = await page.evaluate(async () => {
-      return fetch('/api/account/delete', {
-        method: 'OPTIONS'
-      });
+    // OPTIONSリクエストのテスト (Node.js context)
+    const response = await page.request.fetch('/api/account/delete', {
+      method: 'OPTIONS'
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status()).toBe(200);
     
     // CORSヘッダーの確認
-    const allowMethods = response.headers.get('access-control-allow-methods');
-    const allowHeaders = response.headers.get('access-control-allow-headers');
+    const allowMethods = response.headers()['access-control-allow-methods'];
+    const allowHeaders = response.headers()['access-control-allow-headers'];
     
     expect(allowMethods).toContain('DELETE');
     expect(allowHeaders).toContain('Content-Type');

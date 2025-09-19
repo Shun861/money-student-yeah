@@ -51,7 +51,7 @@ jobs:
           sleep 10
         env:
           NODE_ENV: test
-          E2E_BASE_URL: http://localhost:3000
+          E2E_BASE_URL: http://localhost:3100
 
       - name: Run E2E Tests - Logout
         run: npm run test:e2e:logout
@@ -109,7 +109,7 @@ jobs:
 
       - name: Check for vulnerabilities
         run: |
-          if npm audit --audit-level=high --json | jq -e '.vulnerabilities | length > 0'; then
+          if npm audit --audit-level=high --json | jq -e '.vulnerabilities | to_entries | map(select(.value.severity == "high" or .value.severity == "critical")) | length > 0'; then
             echo "High or critical vulnerabilities found!"
             exit 1
           fi

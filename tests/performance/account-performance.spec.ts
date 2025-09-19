@@ -155,14 +155,7 @@ test.describe('Performance Tests', () => {
     const apiTimes: number[] = [];
     
     await page.route('**/api/account/delete', async (route) => {
-      const startTime = Date.now();
-      
-      // 実際のAPIレスポンスをシミュレート
-      await new Promise(resolve => setTimeout(resolve, 100)); // 100ms遅延
-      
-      const endTime = Date.now();
-      apiTimes.push(endTime - startTime);
-      
+      // 実際のAPIレスポンスをシミュレート（遅延なし）
       route.fulfill({
         status: 400,
         contentType: 'application/json',
@@ -170,17 +163,21 @@ test.describe('Performance Tests', () => {
       });
     });
     
-    // 複数回APIを呼び出し
+    // 複数回APIを呼び出してネットワーク時間を測定
     for (let i = 0; i < 5; i++) {
       await page.getByRole('button', { name: /アカウントを削除/ }).click();
       await page.getByRole('button', { name: /理解しました - 続行/ }).click();
       await page.getByPlaceholder(/パスワードを入力してください/).fill('wrongpassword');
       await page.getByPlaceholder(/アカウントを削除/).fill('アカウントを削除');
       await page.getByRole('button', { name: /最終確認へ/ }).click();
+      
+      const startTime = Date.now();
       await page.getByRole('button', { name: /アカウントを削除/ }).click();
       
-      // エラーメッセージが表示されるまで待機
+      // エラーメッセージが表示されるまで待機してレスポンス時間を記録
       await expect(page.getByText(/パスワードが正しくありません/)).toBeVisible();
+      const endTime = Date.now();
+      apiTimes.push(endTime - startTime);
       
       // フォームをリセット
       await page.getByRole('button', { name: /キャンセル/ }).click();

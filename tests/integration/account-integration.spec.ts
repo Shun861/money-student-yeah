@@ -197,7 +197,7 @@ test.describe('Responsive Design Tests', () => {
     await page.goto('/settings');
     
     // タッチイベントのシミュレート
-    await page.tap('[role="button"][aria-label*="menu"], [role="button"][aria-label*="メニュー"]');
+    await page.getByRole('button', { name: /menu|メニュー/i }).click();
     await expect(page.getByRole('button', { name: /logout|ログアウト/i })).toBeVisible();
     
     // スワイプでサイドバーを閉じる
