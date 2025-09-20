@@ -147,26 +147,21 @@ test.describe('Performance Tests', () => {
     console.log(`Form validation completed in ${duration}ms`);
   });
 
-  test('API response time should be reasonable', async ({ page, context }) => {
+  test('UI response time should be reasonable', async ({ page, context }) => {
     await setState(context, { auth: true, onboarded: true });
     await page.goto('/settings');
     
-    // API レスポンス時間とUI更新時間を分離して測定
-    const apiTimes: number[] = [];
+    // UI更新時間のみを測定（APIはモック）
     const uiTimes: number[] = [];
     
     await page.route('**/api/account/delete', async (route) => {
-      const apiStartTime = Date.now();
-      
-      // 実際のAPIレスポンスをシミュレート（遅延なし）
+      // 実際のAPIレスポンスをシミュレート
+      // API応答時間はモックなので測定しない（常に1ms未満のため）
       route.fulfill({
         status: 400,
         contentType: 'application/json',
         body: JSON.stringify({ error: 'パスワードが正しくありません。' })
       });
-      
-      const apiEndTime = Date.now();
-      apiTimes.push(apiEndTime - apiStartTime);
     });
     
     // 複数回APIを呼び出してUI更新時間を測定
@@ -189,17 +184,15 @@ test.describe('Performance Tests', () => {
       await page.getByRole('button', { name: /キャンセル/ }).click();
     }
     
-    const averageApiTime = apiTimes.reduce((a, b) => a + b, 0) / apiTimes.length;
-    const maxApiTime = Math.max(...apiTimes);
     const averageUiTime = uiTimes.reduce((a, b) => a + b, 0) / uiTimes.length;
     const maxUiTime = Math.max(...uiTimes);
     
-    expect(averageApiTime).toBeLessThan(100); // API応答は平均100ms以内
-    expect(maxApiTime).toBeLessThan(200); // API応答は最大200ms以内
+    // API応答時間のアサーションは省略（モック応答のため意味がない）
+    // 実際のAPI性能テストは統合テストまたは本番環境で実施
     expect(averageUiTime).toBeLessThan(1000); // UI更新は平均1秒以内
     expect(maxUiTime).toBeLessThan(2000); // UI更新は最大2秒以内
     
-    console.log(`API response - Average: ${averageApiTime}ms, Max: ${maxApiTime}ms`);
+    // API応答時間はモックのため測定対象外
     console.log(`UI update - Average: ${averageUiTime}ms, Max: ${maxUiTime}ms`);
   });
 
