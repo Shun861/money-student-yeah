@@ -156,7 +156,7 @@ test.describe('Performance Tests', () => {
     
     await page.route('**/api/account/delete', async (route) => {
       // 実際のAPIレスポンスをシミュレート
-      // API応答時間はモックなので測定しない（常に1ms未満のため）
+      // API応答時間はモックなので測定しない（モックの応答時間は実際のAPI性能を反映しないため、システム状況によって変動します）
       route.fulfill({
         status: 400,
         contentType: 'application/json',
