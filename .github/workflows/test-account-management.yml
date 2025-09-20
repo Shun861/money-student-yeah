@@ -110,13 +110,17 @@ jobs:
       - name: Check for vulnerabilities
         run: |
           # Run npm audit and save output
-          npm audit --audit-level=high --json > audit.json
-          AUDIT_EXIT_CODE=$?
-          if [ $AUDIT_EXIT_CODE -ne 0 ]; then
-            echo "npm audit failed to run. Exit code: $AUDIT_EXIT_CODE"
+          # Note: npm audit returns exit code 1 when vulnerabilities are found (not a failure)
+          # Exit codes: 0 = no vulnerabilities, 1 = vulnerabilities found, >1 = actual command failure
+          npm audit --audit-level=high --json > audit.json || AUDIT_EXIT_CODE=$?
+          
+          # Only exit on actual command failures (exit codes > 1), not vulnerability detection (exit code 1)
+          if [ "${AUDIT_EXIT_CODE:-0}" -gt 1 ]; then
+            echo "npm audit command failed. Exit code: $AUDIT_EXIT_CODE"
             cat audit.json || true
             exit $AUDIT_EXIT_CODE
           fi
+          
           # Extract high or critical vulnerabilities
           VULNS=$(jq '.vulnerabilities | to_entries | map(select(.value.severity == "high" or .value.severity == "critical"))' audit.json)
           COUNT=$(echo "$VULNS" | jq 'length')
