@@ -241,18 +241,26 @@ test.describe('Performance Tests', () => {
       
       // ガベージコレクションを促す
       await page.evaluate(() => {
-        if ((window as any).gc) {
-          (window as any).gc();
+        const windowWithGc = window as Window & { gc?: () => void };
+        if (windowWithGc.gc) {
+          windowWithGc.gc();
         }
       });
     }
     
     // メモリ使用量を取得（可能な場合）
     const memoryInfo = await page.evaluate(() => {
-      return (performance as any).memory ? {
-        usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-        totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-        jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
+      const performanceWithMemory = performance as Performance & {
+        memory?: {
+          usedJSHeapSize: number;
+          totalJSHeapSize: number;
+          jsHeapSizeLimit: number;
+        };
+      };
+      return performanceWithMemory.memory ? {
+        usedJSHeapSize: performanceWithMemory.memory.usedJSHeapSize,
+        totalJSHeapSize: performanceWithMemory.memory.totalJSHeapSize,
+        jsHeapSizeLimit: performanceWithMemory.memory.jsHeapSizeLimit
       } : null;
     });
     
