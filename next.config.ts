@@ -16,26 +16,26 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Bundle size最適化
-  experimental: {
-    optimizePackageImports: ['chart.js', 'react-chartjs-2'],
-  },
-  // Bundle Analyzerの設定（開発用）
-  ...(process.env['ANALYZE'] === 'true' && {
-    webpack: (config: any) => {
-      if (process.env['ANALYZE']) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: true,
-            generateStatsFile: true,
-          })
-        );
-      }
-      return config;
-    },
-  }),
+  // Bundle size最適化 - 一時的に無効化
+  // experimental: {
+  //   optimizePackageImports: ['chart.js', 'react-chartjs-2'],
+  // },
+  // Bundle Analyzerの設定（開発用） - 一時的に無効化
+  // ...(process.env['ANALYZE'] === 'true' && {
+  //   webpack: (config: any) => {
+  //     if (process.env['ANALYZE']) {
+  //       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+  //       config.plugins.push(
+  //         new BundleAnalyzerPlugin({
+  //           analyzerMode: 'static',
+  //           openAnalyzer: true,
+  //           generateStatsFile: true,
+  //         })
+  //       );
+  //     }
+  //     return config;
+  //   },
+  // }),
 };
 
 export default nextConfig;
