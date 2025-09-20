@@ -200,13 +200,8 @@ test.describe('Responsive Design Tests', () => {
     await page.getByRole('button', { name: /menu|メニュー/i }).click();
     await expect(page.getByRole('button', { name: /logout|ログアウト/i })).toBeVisible();
     
-    // スワイプでサイドバーを閉じる
-    await page.evaluate(() => {
-      const event = new TouchEvent('touchstart', {
-        touches: [{ clientX: 300, clientY: 400 } as Touch]
-      });
-      document.dispatchEvent(event);
-    });
+    // Playwrightのtouchscreen APIでスワイプをシミュレート
+    await page.touchscreen.tap(300, 400);
     
     await page.tap('body', { position: { x: 350, y: 400 } });
     await expect(page.getByRole('button', { name: /logout|ログアウト/i })).not.toBeVisible();

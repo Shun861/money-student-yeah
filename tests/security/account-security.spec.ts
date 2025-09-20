@@ -107,7 +107,8 @@ test.describe('Account Deletion API Security', () => {
   });
 
   test('should handle CORS properly', async ({ page }) => {
-    // OPTIONSリクエストのテスト (Node.js context)
+    // OPTIONSリクエストのテスト (Playwright's APIRequestContext)
+    // APIエンドポイントのCORSプリフライトレスポンスをテスト
     const response = await page.request.fetch('/api/account/delete', {
       method: 'OPTIONS'
     });

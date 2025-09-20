@@ -151,19 +151,25 @@ test.describe('Performance Tests', () => {
     await setState(context, { auth: true, onboarded: true });
     await page.goto('/settings');
     
-    // API レスポンス時間を測定
+    // API レスポンス時間とUI更新時間を分離して測定
     const apiTimes: number[] = [];
+    const uiTimes: number[] = [];
     
     await page.route('**/api/account/delete', async (route) => {
+      const apiStartTime = Date.now();
+      
       // 実際のAPIレスポンスをシミュレート（遅延なし）
       route.fulfill({
         status: 400,
         contentType: 'application/json',
         body: JSON.stringify({ error: 'パスワードが正しくありません。' })
       });
+      
+      const apiEndTime = Date.now();
+      apiTimes.push(apiEndTime - apiStartTime);
     });
     
-    // 複数回APIを呼び出してネットワーク時間を測定
+    // 複数回APIを呼び出してUI更新時間を測定
     for (let i = 0; i < 5; i++) {
       await page.getByRole('button', { name: /アカウントを削除/ }).click();
       await page.getByRole('button', { name: /理解しました - 続行/ }).click();
@@ -171,13 +177,13 @@ test.describe('Performance Tests', () => {
       await page.getByPlaceholder(/アカウントを削除/).fill('アカウントを削除');
       await page.getByRole('button', { name: /最終確認へ/ }).click();
       
-      const startTime = Date.now();
+      const uiStartTime = Date.now();
       await page.getByRole('button', { name: /アカウントを削除/ }).click();
       
-      // エラーメッセージが表示されるまで待機してレスポンス時間を記録
+      // エラーメッセージが表示されるまで待機してUI更新時間を記録
       await expect(page.getByText(/パスワードが正しくありません/)).toBeVisible();
-      const endTime = Date.now();
-      apiTimes.push(endTime - startTime);
+      const uiEndTime = Date.now();
+      uiTimes.push(uiEndTime - uiStartTime);
       
       // フォームをリセット
       await page.getByRole('button', { name: /キャンセル/ }).click();
@@ -185,11 +191,16 @@ test.describe('Performance Tests', () => {
     
     const averageApiTime = apiTimes.reduce((a, b) => a + b, 0) / apiTimes.length;
     const maxApiTime = Math.max(...apiTimes);
+    const averageUiTime = uiTimes.reduce((a, b) => a + b, 0) / uiTimes.length;
+    const maxUiTime = Math.max(...uiTimes);
     
-    expect(averageApiTime).toBeLessThan(1000); // 平均1秒以内
-    expect(maxApiTime).toBeLessThan(2000); // 最大2秒以内
+    expect(averageApiTime).toBeLessThan(100); // API応答は平均100ms以内
+    expect(maxApiTime).toBeLessThan(200); // API応答は最大200ms以内
+    expect(averageUiTime).toBeLessThan(1000); // UI更新は平均1秒以内
+    expect(maxUiTime).toBeLessThan(2000); // UI更新は最大2秒以内
     
     console.log(`API response - Average: ${averageApiTime}ms, Max: ${maxApiTime}ms`);
+    console.log(`UI update - Average: ${averageUiTime}ms, Max: ${maxUiTime}ms`);
   });
 
   test('concurrent user simulation', async ({ browser }) => {
@@ -240,6 +251,8 @@ test.describe('Performance Tests', () => {
       await page.goto('/income');
       
       // ガベージコレクションを促す
+      // 注意: window.gc()はChromeが--expose-gcフラグ付きで起動された場合のみ利用可能
+      // CI環境で利用する場合はPlaywright設定でlaunchOptionsにargs: ['--expose-gc']を追加
       await page.evaluate(() => {
         const windowWithGc = window as Window & { gc?: () => void };
         if (windowWithGc.gc) {

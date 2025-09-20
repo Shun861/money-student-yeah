@@ -109,9 +109,23 @@ jobs:
 
       - name: Check for vulnerabilities
         run: |
-          if npm audit --audit-level=high --json | jq -e '.vulnerabilities | to_entries | map(select(.value.severity == "high" or .value.severity == "critical")) | length > 0'; then
-            echo "High or critical vulnerabilities found!"
+          # Run npm audit and save output
+          npm audit --audit-level=high --json > audit.json
+          AUDIT_EXIT_CODE=$?
+          if [ $AUDIT_EXIT_CODE -ne 0 ]; then
+            echo "npm audit failed to run. Exit code: $AUDIT_EXIT_CODE"
+            cat audit.json || true
+            exit $AUDIT_EXIT_CODE
+          fi
+          # Extract high or critical vulnerabilities
+          VULNS=$(jq '.vulnerabilities | to_entries | map(select(.value.severity == "high" or .value.severity == "critical"))' audit.json)
+          COUNT=$(echo "$VULNS" | jq 'length')
+          if [ "$COUNT" -gt 0 ]; then
+            echo "High or critical vulnerabilities found:"
+            echo "$VULNS" | jq .
             exit 1
+          else
+            echo "No high or critical vulnerabilities found."
           fi
 
   lint-and-type-check:
@@ -205,9 +219,9 @@ jobs:
 
       - name: Run accessibility tests
         run: |
-          axe http://localhost:3000/login --exit
-          axe http://localhost:3000/dashboard --exit
-          axe http://localhost:3000/settings --exit
+          axe http://localhost:3100/login --exit
+          axe http://localhost:3100/dashboard --exit
+          axe http://localhost:3100/settings --exit
         continue-on-error: true
 
   test-summary:
