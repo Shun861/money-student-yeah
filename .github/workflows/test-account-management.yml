@@ -112,8 +112,8 @@ jobs:
           # Run npm audit and save output
           # Note: npm audit returns exit code 1 when vulnerabilities are found (not a failure)
           # Exit codes: 0 = no vulnerabilities, 1 = vulnerabilities found, >1 = actual command failure
-          npm audit --audit-level=high --json > audit.json || AUDIT_EXIT_CODE=$?
-          
+          npm audit --audit-level=high --json > audit.json
+          AUDIT_EXIT_CODE=$?
           # Only exit on actual command failures (exit codes > 1), not vulnerability detection (exit code 1)
           if [ "${AUDIT_EXIT_CODE:-0}" -gt 1 ]; then
             echo "npm audit command failed. Exit code: $AUDIT_EXIT_CODE"
