@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import type { Configuration } from "webpack";
 
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -22,9 +23,10 @@ const nextConfig: NextConfig = {
   },
   // Bundle Analyzerの設定（開発用）
   ...(process.env['ANALYZE'] === 'true' && {
-    webpack: (config: any) => {
+    webpack: async (config: Configuration) => {
       if (process.env['ANALYZE']) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+        const { BundleAnalyzerPlugin } = await import('webpack-bundle-analyzer');
+        config.plugins = config.plugins ?? [];
         config.plugins.push(
           new BundleAnalyzerPlugin({
             analyzerMode: 'static',
